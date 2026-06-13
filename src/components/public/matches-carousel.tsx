@@ -21,13 +21,17 @@ export function MatchesCarousel({
   upcoming: LiveSnapshotRead[];
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [active, setActive] = useState(1);
+  // Default to the most useful slide: Live if any, else Previous if any,
+  // else Upcoming. Beats showing an empty "no live matches" tab when there
+  // are completed or upcoming ones to look at.
+  const initialIndex = live.length > 0 ? 1 : previous.length > 0 ? 0 : 2;
+  const [active, setActive] = useState(initialIndex);
   const router = useRouter();
 
   useEffect(() => {
     const el = ref.current;
-    if (el) el.scrollLeft = el.clientWidth; // center the Live slide on load
-  }, []);
+    if (el) el.scrollLeft = initialIndex * el.clientWidth;
+  }, [initialIndex]);
 
   const go = (i: number) => {
     const el = ref.current;

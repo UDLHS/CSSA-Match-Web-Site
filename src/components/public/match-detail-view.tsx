@@ -23,6 +23,8 @@ export function MatchDetailView({ initial }: { initial: MatchDetailDTO }) {
 
   const inPlay = data.status === "LIVE" || data.status === "INNINGS_BREAK";
 
+  // Poll the detail endpoint while the match is in play. 3s feels real-time
+  // for a hand on the boundary; the request is cheap (one Mumbai-local query).
   useEffect(() => {
     if (!inPlay) return;
     const id = setInterval(async () => {
@@ -33,7 +35,7 @@ export function MatchDetailView({ initial }: { initial: MatchDetailDTO }) {
       } catch {
         // keep the last payload; next tick retries (design-spec error rule)
       }
-    }, 12_000);
+    }, 3_000);
     return () => clearInterval(id);
   }, [data.matchId, inPlay]);
 

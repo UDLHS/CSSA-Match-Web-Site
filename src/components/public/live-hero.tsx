@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import type { CSSProperties } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, type CSSProperties } from "react";
 import type { LiveSnapshotRead, SnapshotTeam } from "@/lib/live-types";
 import { fmtDateTime, fmtRate, shortName } from "@/lib/format";
 import {
@@ -22,6 +23,21 @@ import { useLiveSnapshot } from "./use-live-snapshot";
  */
 export function LiveHero({ initial }: { initial: LiveSnapshotRead | null }) {
   const { snap, degraded } = useLiveSnapshot(initial);
+  const router = useRouter();
+
+  // When a match transitions out of play (LIVE → COMPLETED / ABANDONED), the
+  // rest of the home page (Matches carousel, leaderboard preview) has stale
+  // server-rendered data. Refresh so the just-finished match jumps into
+  // "Previous" without the user having to reload.
+  const lastStatus = useRef(snap?.status);
+  useEffect(() => {
+    const wasInPlay =
+      lastStatus.current === "LIVE" || lastStatus.current === "INNINGS_BREAK";
+    const nowDone =
+      snap?.status === "COMPLETED" || snap?.status === "ABANDONED";
+    if (wasInPlay && nowDone) router.refresh();
+    lastStatus.current = snap?.status;
+  }, [snap?.status, router]);
 
   if (!snap) {
     return (
