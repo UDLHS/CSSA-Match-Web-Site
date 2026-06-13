@@ -167,6 +167,23 @@ export function ScoringConsole({ initial }: { initial: ScoringStateDTO }) {
     );
   }
 
+  // ---- Match is in play but no active innings AND no next innings to start
+  //      ⇒ chase resolved (target reached / all-out in innings 2) or innings 1
+  //      ended in a one-innings game — show a clear "complete now" panel.
+  if (!innings && !state.startInnings && state.canComplete) {
+    return (
+      <CompleteNowPanel
+        state={state}
+        busy={busy}
+        error={error}
+        completeOpen={completeOpen}
+        setCompleteOpen={setCompleteOpen}
+        onConfirmComplete={(args) => run(() => consoleCompleteMatch(state.matchId, { matchId: state.matchId, ...args }))}
+        onAbandon={(reason) => run(() => consoleAbandonMatch(mid, { matchId: state.matchId, reason }))}
+      />
+    );
+  }
+
   // ---- Need to start an innings ----
   if (!innings && state.startInnings) {
     return (
@@ -645,6 +662,65 @@ function CompleteDialog({ players, busy, onConfirm, onCancel }: { players: Scori
 // ----------------------------------------------------------------
 // Start innings
 // ----------------------------------------------------------------
+function CompleteNowPanel({
+  state,
+  busy,
+  error,
+  completeOpen,
+  setCompleteOpen,
+  onConfirmComplete,
+  onAbandon,
+}: {
+  state: ScoringStateDTO;
+  busy: boolean;
+  error: string | null;
+  completeOpen: boolean;
+  setCompleteOpen: (v: boolean) => void;
+  onConfirmComplete: (a: { playerOfMatchId?: string; resultText?: string }) => void;
+  onAbandon: (reason: string) => void;
+}) {
+  const [abandonOpen, setAbandonOpen] = useState(false);
+  return (
+    <div className="card" style={{ padding: 28, display: "flex", flexDirection: "column", alignItems: "center", gap: 14, textAlign: "center", borderColor: "var(--highlight)" }}>
+      <span style={{ color: "var(--highlight)" }}><Icon d={IC.trophy} size={32} /></span>
+      <span className="t-h3">Match ready to complete</span>
+      <span style={{ fontSize: 13, color: "var(--muted)", maxWidth: 360 }}>
+        Tap <b>Complete match</b> — the result is auto-derived from the chase
+        and the public site updates instantly. Use <b>Abandon</b> only if the
+        game was called off.
+      </span>
+      {error && (
+        <div className="row" style={{ gap: 8, fontSize: 12.5, color: "var(--danger)" }}>
+          <Icon d={IC.alert} size={14} /> {error}
+        </div>
+      )}
+      <div className="row" style={{ gap: 10 }}>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={() => setAbandonOpen(true)} disabled={busy}>
+          Abandon…
+        </button>
+        <button type="button" className="btn btn-primary" onClick={() => setCompleteOpen(true)} disabled={busy}>
+          <Icon d={IC.check2} size={15} /> Complete match
+        </button>
+      </div>
+      {completeOpen && (
+        <CompleteDialog
+          players={state.allPlayers}
+          busy={busy}
+          onConfirm={(args) => { setCompleteOpen(false); onConfirmComplete(args); }}
+          onCancel={() => setCompleteOpen(false)}
+        />
+      )}
+      {abandonOpen && (
+        <AbandonDialog
+          busy={busy}
+          onConfirm={(reason) => { setAbandonOpen(false); onAbandon(reason); }}
+          onCancel={() => setAbandonOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
 function StartInningsPanel({
   state,
   busy,
