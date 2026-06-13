@@ -11,7 +11,12 @@ import {
   swapStrike,
   undoLastEvent,
 } from "./scoring";
-import { startInnings, endInnings, completeMatch } from "./match-lifecycle";
+import {
+  startInnings,
+  endInnings,
+  completeMatch,
+  abandonMatch,
+} from "./match-lifecycle";
 
 /**
  * Re-read the full console state after a mutation. Authz-gated like every
@@ -62,4 +67,7 @@ export async function consoleEndInnings(matchId: string, input: unknown) {
 }
 export async function consoleCompleteMatch(matchId: string, input: unknown) {
   return thenState(matchId, await completeMatch(input));
+}
+export async function consoleAbandonMatch(matchId: string, input: unknown) {
+  return thenState(matchId, await abandonMatch(input));
 }

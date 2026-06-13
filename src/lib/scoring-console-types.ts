@@ -89,8 +89,10 @@ export interface ScoringStateDTO {
     /** Teams to choose batting side from (with their XI for opener pick). */
     options: { team: ConsoleTeam; xi: ConsolePlayerOption[] }[];
   } | null;
-  /** Match can be completed now (both innings exist / chase resolved). */
+  /** Match can be completed now (at least one ball has been bowled). */
   canComplete: boolean;
+  /** Match can be abandoned (it's in play). */
+  canAbandon: boolean;
   /** All squad members per team (for Player-of-the-Match picker). */
   allPlayers: ConsolePlayerOption[];
 }

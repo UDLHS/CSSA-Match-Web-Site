@@ -380,7 +380,8 @@ export async function abandonMatch(
 ): Promise<ActionResult<{ snapshotVersion: number }>> {
   return runAction(async () => {
     const input = abandonMatchSchema.parse(raw);
-    const actor = await requireRole(MASTER_DATA_ROLES);
+    // Scorers can call this from the console; editors/super can do it anywhere.
+    const actor = await requireRole(SCORING_ROLES);
 
     const match = await prisma.match.findUnique({
       where: { id: input.matchId },
@@ -410,6 +411,8 @@ export async function abandonMatch(
       });
       return v;
     });
+    // The match disappears from Live + appears in Previous on the public site.
+    revalidatePublic(PUBLIC_HOME, PUBLIC_MATCHES);
     return { snapshotVersion: version };
   });
 }

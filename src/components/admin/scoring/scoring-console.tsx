@@ -13,6 +13,7 @@ import {
   consoleStartInnings,
   consoleEndInnings,
   consoleCompleteMatch,
+  consoleAbandonMatch,
 } from "@/server/actions/scoring-console";
 import type { ActionResult } from "@/server/result";
 import { ScorePad } from "./score-pad";
@@ -227,10 +228,12 @@ export function ScoringConsole({ initial }: { initial: ScoringStateDTO }) {
           <MatchControls
             innings={innings}
             canComplete={state.canComplete}
+            canAbandon={state.canAbandon}
             busy={busy}
             onEndInnings={() => run(() => consoleEndInnings(mid, { inningsId: innings.id, reason: "MANUAL" }))}
             onRetire={() => setRetireOpen(true)}
             onComplete={() => setCompleteOpen(true)}
+            onAbandon={(reason) => run(() => consoleAbandonMatch(mid, { matchId: state.matchId, reason }))}
           />
         </div>
 
@@ -465,18 +468,23 @@ function LastBalls({ innings, onUndo, busy }: { innings: ConsoleInnings; onUndo:
 function MatchControls({
   innings,
   canComplete,
+  canAbandon,
   busy,
   onEndInnings,
   onRetire,
   onComplete,
+  onAbandon,
 }: {
   innings: ConsoleInnings;
   canComplete: boolean;
+  canAbandon: boolean;
   busy: boolean;
   onEndInnings: () => void;
   onRetire: () => void;
   onComplete: () => void;
+  onAbandon: (reason: string) => void;
 }) {
+  const [abandonOpen, setAbandonOpen] = useState(false);
   return (
     <div className="card" style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
       <span className="t-label">Match controls</span>
@@ -484,11 +492,42 @@ function MatchControls({
         <ConfirmButton label="End innings…" className="btn btn-ghost btn-sm" busy={busy} message="End this innings now? Remaining overs are forfeited." onConfirm={onEndInnings} />
         <button type="button" className="btn btn-ghost btn-sm" onClick={onRetire} disabled={busy}>Retire batter…</button>
         <ConfirmButton label="Complete match…" className="btn btn-danger btn-sm" busy={busy || !canComplete} message="Complete the match and lock scoring?" onConfirm={onComplete} disabled={!canComplete} />
-        <span className="btn btn-soft btn-sm" style={{ opacity: 0.6, cursor: "default" }}>
-          <Icon d={IC.trophy} size={13} /> PoM at completion
-        </span>
+        <button type="button" className="btn btn-danger btn-sm" disabled={busy || !canAbandon} onClick={() => setAbandonOpen(true)}>
+          Abandon match…
+        </button>
       </div>
-      <span style={{ fontSize: 10.5, color: "var(--muted)" }}>“…” buttons ask to confirm — destructive actions are never one tap.</span>
+      <span style={{ fontSize: 10.5, color: "var(--muted)" }}>
+        Complete = result decided. Abandon = called off (rain, light, walkover). Both lock the match and update the public site immediately.
+      </span>
+      {abandonOpen && (
+        <AbandonDialog
+          busy={busy}
+          onConfirm={(reason) => { setAbandonOpen(false); onAbandon(reason); }}
+          onCancel={() => setAbandonOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function AbandonDialog({ busy, onConfirm, onCancel }: { busy: boolean; onConfirm: (reason: string) => void; onCancel: () => void }) {
+  const [reason, setReason] = useState("Match abandoned");
+  return (
+    <div className="overlay" onClick={onCancel} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()} className="card" style={{ width: 380, maxWidth: "100%", padding: 22, display: "flex", flexDirection: "column", gap: 14 }}>
+        <span className="t-h3" style={{ color: "var(--danger)" }}>Abandon match</span>
+        <span style={{ fontSize: 12.5, color: "var(--muted)" }}>
+          The match is locked and shows as <b>Abandoned</b> on the public site. This can&#39;t be undone from here.
+        </span>
+        <div>
+          <span className="field-label">Reason</span>
+          <span className="input"><input type="text" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Match abandoned due to rain" /></span>
+        </div>
+        <div className="row" style={{ gap: 10, justifyContent: "flex-end" }}>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={onCancel}>Cancel</button>
+          <button type="button" className="btn btn-danger btn-sm" disabled={busy || !reason.trim()} onClick={() => onConfirm(reason.trim())}>Confirm abandon</button>
+        </div>
+      </div>
     </div>
   );
 }

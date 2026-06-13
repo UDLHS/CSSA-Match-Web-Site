@@ -105,13 +105,13 @@ export async function getScoringState(
     }
   }
 
-  const i1 = match.innings.find((i) => i.inningsNumber === 1);
-  const i2 = match.innings.find((i) => i.inningsNumber === 2);
+  // A scorer can always end a match in play — the result is auto-derived when
+  // both innings are done; otherwise the scorer types a result (e.g. "abandoned
+  // due to rain"). Empty matches (no balls bowled) should use Abandon instead.
+  const anyBalls = match.innings.some((i) => i.legalBalls > 0 || i.totalRuns > 0);
   const canComplete =
-    (match.status === "LIVE" || match.status === "INNINGS_BREAK") &&
-    !!i1 &&
-    !!i2 &&
-    (i2.status === "COMPLETED" || (i2.target != null && i2.totalRuns >= i2.target));
+    (match.status === "LIVE" || match.status === "INNINGS_BREAK") && anyBalls;
+  const canAbandon = match.status === "LIVE" || match.status === "INNINGS_BREAK";
 
   return {
     matchId: match.id,
@@ -124,6 +124,7 @@ export async function getScoringState(
     innings: inningsDTO,
     startInnings,
     canComplete,
+    canAbandon,
     allPlayers,
   };
 }
