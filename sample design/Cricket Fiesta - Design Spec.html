@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cricket Fiesta '26 — UI/UX Design Spec</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #101A3A; --primary: #4338CA; --gold: #F59E0B; --muted: #5B6478;
+    --border: #DDE2EE; --bg: #F4F6FB; --surface: #fff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "IBM Plex Sans", system-ui, sans-serif; font-size: 14.5px; line-height: 1.55; color: #18213B; background: var(--bg); }
+  .page { max-width: 880px; margin: 0 auto; padding: 48px 32px 80px; }
+  h1, h2, h3 { font-family: "Barlow Condensed", sans-serif; color: var(--ink); margin: 0; }
+  h1 { font-size: 44px; font-weight: 700; line-height: 1.05; }
+  h2 { font-size: 27px; font-weight: 700; margin: 44px 0 12px; padding-top: 20px; border-top: 2px solid var(--ink); }
+  h3 { font-size: 19px; font-weight: 600; margin: 22px 0 8px; }
+  p { margin: 8px 0; }
+  ul { margin: 8px 0; padding-left: 22px; }
+  li { margin: 4px 0; }
+  code { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12.5px; background: #EDF0F8; border-radius: 4px; padding: 1px 5px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0; background: var(--surface); }
+  th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); padding: 8px 10px; border-bottom: 1.5px solid var(--ink); }
+  td { padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .sw { display: inline-block; width: 13px; height: 13px; border-radius: 3px; border: 1px solid rgba(0,0,0,.15); vertical-align: -2px; margin-right: 6px; }
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; background: var(--primary); color: #fff; border-radius: 999px; padding: 2px 10px; }
+  .lead { font-size: 16px; color: var(--muted); }
+  .callout { background: #EEF0FF; border: 1px solid #C9CDF4; border-radius: 10px; padding: 12px 16px; margin: 14px 0; font-size: 13.5px; }
+  .check li { margin: 6px 0; }
+  a { color: var(--primary); }
+  @media print { body { background: #fff; } .page { padding: 0; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <span class="tag">Design spec · v1 · Jun 2026</span>
+  <h1>CSSA Cricket Fiesta '26 — Platform UI/UX Spec</h1>
+  <p class="lead">Public live-score site + admin scoring console · Next.js App Router · Tailwind CSS + shadcn/ui · mobile-first, light by default with full dark tokens. Visuals: see <a href="Cricket Fiesta — Design Explorations.html">Design Explorations</a> (palette switchable via Tweaks).</p>
+
+  <h2>A · Overall UI concept</h2>
+  <p>Premium tournament feel built on three moves: (1) a <b>deep-navy "ink" gradient hero</b> that owns every live-score moment, with the largest type on the page reserved for score digits; (2) <b>white cards on a cool light-gray field</b> with one consistent radius (16px cards / 10px controls) and soft two-layer shadows; (3) <b>color discipline</b> — team colors appear only in logos/monograms and avatars, gold appears only for ranks, player-of-the-match and free-hit, red is reserved for LIVE and wickets. The admin console uses the same tokens but dark ink chrome (sidebar) so a scorer can never confuse it with the public site.</p>
+
+  <h2>B · Color palette (semantic tokens, light + dark)</h2>
+  <p>Primary direction: <b>Royal Indigo × Gold</b>. (Alternates explored: Stadium Navy × Emerald; Fiesta Cerulean × Sunset — see Explorations, section A.)</p>
+  <table>
+    <tr><th>Token</th><th>Light</th><th>Dark</th><th>Use</th></tr>
+    <tr><td><code>background</code></td><td><span class="sw" style="background:#F4F6FB"></span>#F4F6FB</td><td><span class="sw" style="background:#0B1126"></span>#0B1126</td><td>page field</td></tr>
+    <tr><td><code>surface</code></td><td><span class="sw" style="background:#FFFFFF"></span>#FFFFFF</td><td><span class="sw" style="background:#131B36"></span>#131B36</td><td>cards, modals</td></tr>
+    <tr><td><code>surface-2</code></td><td><span class="sw" style="background:#EDF0F8"></span>#EDF0F8</td><td><span class="sw" style="background:#1B2444"></span>#1B2444</td><td>tab rails, table stripes, skeletons</td></tr>
+    <tr><td><code>primary</code></td><td><span class="sw" style="background:#4338CA"></span>#4338CA</td><td><span class="sw" style="background:#818CF8"></span>#818CF8</td><td>actions, active tab, links</td></tr>
+    <tr><td><code>ink</code> (brand navy)</td><td><span class="sw" style="background:#101A3A"></span>#101A3A</td><td><span class="sw" style="background:#0E1530"></span>#0E1530</td><td>hero gradient base, footer, admin sidebar</td></tr>
+    <tr><td><code>accent</code></td><td><span class="sw" style="background:#0E7490"></span>#0E7490</td><td><span class="sw" style="background:#22D3EE"></span>#22D3EE</td><td>secondary links, info</td></tr>
+    <tr><td><code>highlight</code></td><td><span class="sw" style="background:#F59E0B"></span>#F59E0B</td><td><span class="sw" style="background:#FBBF24"></span>#FBBF24</td><td>rank #1–3, PoM, free hit</td></tr>
+    <tr><td><code>success</code></td><td><span class="sw" style="background:#0E9F6E"></span>#0E9F6E</td><td><span class="sw" style="background:#34D399"></span>#34D399</td><td>result text, COMPLETED</td></tr>
+    <tr><td><code>danger</code> / <code>live</code></td><td><span class="sw" style="background:#DC2626"></span>#DC2626 / <span class="sw" style="background:#E11D48"></span>#E11D48</td><td><span class="sw" style="background:#F87171"></span>#F87171 / <span class="sw" style="background:#FB7185"></span>#FB7185</td><td>wicket / LIVE badge</td></tr>
+    <tr><td><code>muted</code> · <code>text-muted</code></td><td><span class="sw" style="background:#5B6478"></span>#5B6478</td><td><span class="sw" style="background:#98A2C4"></span>#98A2C4</td><td>secondary text</td></tr>
+    <tr><td><code>border</code></td><td><span class="sw" style="background:#DDE2EE"></span>#DDE2EE</td><td><span class="sw" style="background:#273158"></span>#273158</td><td>hairlines</td></tr>
+    <tr><td><code>text</code></td><td><span class="sw" style="background:#18213B"></span>#18213B</td><td><span class="sw" style="background:#E7EAF6"></span>#E7EAF6</td><td>body</td></tr>
+  </table>
+  <p>Ball-dot coding (fixed across themes): dot/0 = surface-2 + muted text · 1–3 = surface-2 + text · <b>4 = #2563EB</b> · <b>6 = #7C3AED</b> · <b>W = danger</b> · WD/NB = amber tint outline.</p>
+
+  <h2>C · Typography</h2>
+  <ul>
+    <li><b>Display / headings / scores:</b> Barlow Condensed 600–700 (fallback: "Arial Narrow", sans-serif). Sporty, tall, space-efficient on mobile.</li>
+    <li><b>Body / UI / tables:</b> IBM Plex Sans 400–600 (fallback: system-ui).</li>
+    <li><b>Scale:</b> score-xl 64 · score-lg 40 · score-md 26 · h1 36 · h2 26 · h3 20 · body 14.5 · small 13 · label 11 caps +9% tracking.</li>
+    <li><b>Tabular numerics:</b> every live-updating number gets <code>font-variant-numeric: tabular-nums</code> (IBM Plex Sans supports tnum) and a reserved digit width (<code>min-width</code> in <code>ch</code>) so 99/2 → 100/2 causes zero layout shift. Hero scores in Barlow Condensed sit in a fixed-width container for the same reason.</li>
+  </ul>
+
+  <h2>D · Public pages</h2>
+  <h3>Home</h3>
+  <ul>
+    <li><b>Header:</b> logo + "CRICKET FIESTA '26 / CSSA · University of Kelaniya" lockup, nav (Home, Matches, Players, Leaderboard, Popular), theme toggle, ghost Admin button. Mobile: logo + theme + hamburger → shadcn <code>Sheet</code> (left).</li>
+    <li><b>LiveMatchHero:</b> ink-gradient card. Desktop: 3-col grid (team A score · VS · team B score, batting side full-opacity, bowled-out side at 82%), stats strip (Target / Need / CRR / RRR) in a translucent inset, bottom row = striker•/non-striker/bowler with figures + last-6-balls strip + gold "Full scorecard" button. Mobile: stacked teams, 4-col stat grid, players stack, balls + CTA share a row. Toss line small and muted.</li>
+    <li><b>Role indicator (new):</b> every player avatar carries a small corner badge reflecting <i>current</i> activity — a <b>bat</b> glyph (primary blue) while batting, a <b>ball</b> glyph (accent) while bowling, and <b>no badge / name only</b> while fielding. The same rule drives the hero's striker/non-striker/bowler discs and the leaderboard (bat on the Batting tab, ball on Bowling).</li>
+    <li><b>Match cards (now a swipeable carousel):</b> three snap slides — <b>Previous ← Live → Upcoming</b> — opening centered on Live. Swipe (touch) or arrow buttons (desktop) move between them; a segmented control + dot indicator stay in sync. Each slide is a 3-up grid (1-col mobile) of the cards described below.</li>
+    <li><b>Sponsor slots (new):</b> a leaderboard banner sits <b>between the LiveMatchHero and the matches carousel</b>; a skyscraper sits <b>between the leaderboard preview and popular players</b> (becomes a banner when the columns stack on mobile). Both are placeholders fed by a sponsors/ad table; Player-of-the-Match carries a “presented by” tag and the footer adds a partners strip.</li>
+    <li><b>Leaderboard preview:</b> card with pill tabs Batting/Bowling/Overall, top-5 rows (rank — gold for #1 — avatar, name, team chip, headline stat), full-width soft "View full leaderboard" button.</li>
+    <li><b>Popular players:</b> "★ Official popularity ranking" label; top 3 enlarged (rank disc gold/silver/bronze), rest 4-up grid → 2-up mobile. Card: photo, name, team chip, role badge, vote count.</li>
+    <li><b>Footer:</b> ink bar, lockup + copyright.</li>
+  </ul>
+  <h3>Match details modal</h3>
+  <p>Desktop: centered <code>Dialog</code> 860px, ink header (badge, both scores, need line, close), underline Tabs: Summary · Scorecard · Fall of Wickets · Ball-by-Ball · Info. Mobile: full-screen <code>Sheet</code>, header compresses, tab bar sticky under it. Scorecard = batting table (dismissal under the name on mobile), extras/total strip, bowling table, FoW teaser line. FoW tab = 7-col table (wkt, score, over, player, type, bowler, fielder/helper). Ball-by-ball = over sections with colored ball dots + one-line commentary.</p>
+  <h3>Leaderboard page</h3>
+  <p>Title, search input, team Select, three tabs. Desktop = full <code>Table</code> (Batting: Rank Player Team M Runs Balls SR Avg 4s 6s HS; Bowling: O R W Econ Avg SR Best; Overall: Bat/Bowl/Field/Total pts). <b>Mobile collapse rule:</b> card keeps Rank + avatar + Player + team chip + headline stat (Runs/Wkts/Total) + chevron; all remaining columns move into an expandable details grid inside the card.</p>
+  <h3>Player modal</h3>
+  <p>Ink header: large photo, name, team chip, batting/bowling styles, role badge, vote badge. Tabs Overview / Batting / Bowling / Recent Matches; Overview = 3×2 stat cards (runs, SR, avg, wickets, HS, votes).</p>
+
+  <h2>E · Admin area</h2>
+  <p><b>Layout:</b> 220px ink sidebar (Dashboard, Teams, Players, Matches, Venues, Live Scoring — red dot when live, Popular Votes, Sponsors & Ads, Leaderboard, Admin Users, Audit Logs, Settings; active = gold inset bar), topbar (page title, theme, avatar + role, logout). Mobile: sidebar becomes a <code>Sheet</code> drawer from the hamburger.</p>
+  <p><b>Management pattern — every entity is admin-editable</b> via a consistent <b>list → edit</b> flow (searchable/filterable table → full form):</p>
+  <ul>
+    <li><b>Teams:</b> list (logo, short, colors, squad size, P/W/L, status) → editor: name, short (≤4), logo upload, primary/secondary color (contrast-checked), <b>home venue select</b>, captain, coach, group, founded, status, bio, and an inline <b>squad table</b> (add/remove/reorder players).</li>
+    <li><b>Players:</b> filterable list (team, role, status) → editor: photo, name, team, jersey, DOB, status, primary role, batting hand, bowling style, captain toggle, bio, and an admin <b>vote override</b> with audit note (stats are computed, read-only).</li>
+    <li><b>Matches:</b> list (#, teams, date, venue, format, status) → editor in sections — Fixture (stage, teams, number), <b>Schedule & venue</b> (date, time, <b>venue select + add-venue inline</b>, format preset T20/T10/ODI/Hundred/Custom, overs, balls/over), Toss & officials, and a two-column <b>Playing XI</b> checklist (11/side).</li>
+    <li><b>Venues:</b> dedicated manager — the admin defines every place (name, location, capacity, pitch type, availability) that the match form can select.</li>
+    <li><b>Sponsors & Ads:</b> sponsors CRUD (name, tier, website, status) + an <b>ad-placement board</b> (each public slot with current creative, schedule, impressions, live toggle) + a <b>“Load new ad”</b> form where the admin picks a placement (auto-fills required dimensions), assigns a sponsor, uploads the creative, sets click-URL, schedule and rotation weight.</li>
+    <li><b>Popular votes:</b> per-player count steppers + override, voting window open/close, one-vote-per-device and public-visibility rules.</li>
+    <li><b>Leaderboard:</b> rebuild engine — status, last-rebuilt, one-click recompute of batting/bowling/points/standings/popularity.</li>
+    <li><b>Admin users:</b> users list with role (Super admin/Editor/Scorer/Viewer), scope, status, plus a configurable <b>role-permission matrix</b>.</li>
+    <li><b>Audit logs:</b> full who/what/when table with user/action/date filters + CSV export.</li>
+    <li><b>Settings:</b> tournament name/season/logo, default palette & mode, format defaults, points system, voting rules, and a danger zone (reset data).</li>
+  </ul>
+  <p><b>Dashboard:</b> 4 stat cards; a live-match card with red border + "Open scoring console" CTA; today's fixtures + recent audit log side by side.</p>
+  <h3>Live scoring console (most important screen)</h3>
+  <ul>
+    <li><b>A — summary strip</b> (ink): score, overs, target, need, CRR, RRR, innings, FREE HIT badge when armed.</li>
+    <li><b>B — current players:</b> striker highlighted (primary-soft fill + dot), non-striker, bowler; each row has a Change button; "⇄ Swap ends" in the panel header.</li>
+    <li><b>C — quick pad:</b> 3×2 grid of 0 1 2 3 4 6 (64px tall, 4 in blue, 6 in violet), extras row (Wide/No ball/Bye/Leg bye, amber), WICKET (red, 2-span) + Undo. A run or dot is <b>one tap, no confirm</b>. On free hit the pad shows "⚡ FREE HIT — dismissals limited to run-out" and the WICKET button dims; its dialog pre-filters to run-out only.</li>
+    <li><b>D — wicket dialog</b> (mobile: bottom <code>Sheet</code>): dismissal-type chip grid, player out, "bowler credited" toggle, fielder/thrower/keeper, direct-hit toggle, end, new batter, notes → red Confirm.</li>
+    <li><b>E — last balls:</b> last 6 with over no., dot, description; <b>Undo</b> (ghost, latest only) is visually distinct from <b>Edit</b> (dashed primary — triggers recompute, always confirms); "View audit history" link.</li>
+    <li><b>F — match controls:</b> Start/End innings, Complete match, PoM; every "…" button opens a confirm <code>AlertDialog</code>; Complete match is the only red one.</li>
+    <li><b>Mobile order</b> (390): summary → players → last 3 balls → pad (thumb zone) → controls. All pad targets ≥56px.</li>
+  </ul>
+  <h3>Forms & validation</h3>
+  <p>Team (name, short ≤4 chars, logo upload w/ monogram fallback, primary/secondary color with automatic 4.5:1 contrast check), Player (name, photo, team, role, styles, jersey #), Match (tournament, teams, venue, datetime, format, overs, toss, playing-XI selector with per-team checklists + count chip), Votes (search, current count, ± steppers, save → Toast). Inline errors under the field in danger red, never only color: icon + message. Submit disabled until valid.</p>
+
+  <h2>F · Component list</h2>
+  <p><b>Public:</b> Header, LiveMatchHero, TeamScoreBlock, MatchCard, MatchDetailsModal, ScoreboardTable, BallByBallTimeline, LeaderboardTabs, PlayerCard, PlayerDetailsModal, PopularPlayerCard, Footer.<br>
+  <b>Admin:</b> AdminLayout, AdminSidebar, AdminTopbar, StatsCard, QuickScorePanel, CurrentPlayersPanel, WicketDialog, DeliveryHistory, MatchControlPanel, TeamsList, TeamForm, PlayersList, PlayerForm, MatchesList, MatchForm, PlayingXISelector, VenuesManager, VenueForm, SponsorsTable, AdPlacementBoard, LoadAdForm, VoteEditor, LeaderboardRebuild, AdminUsersTable, RolePermissionMatrix, AuditLogTable, SettingsForm.<br>
+  <b>Shared atoms:</b> StatusBadge, BallDot, TeamLogo (monogram fallback), AvatarInitials, RoleAvatar (bat/ball/fielding badge), RoleIconDisc, MatchCarousel, SponsorSlot, StatTile, SkeletonRow.</p>
+
+  <h2>G · Responsive plan</h2>
+  <table>
+    <tr><th>Breakpoint</th><th>What reflows</th></tr>
+    <tr><td>&lt; 640 (mobile)</td><td>Hero stacks; match cards 1-col; leaderboard table → cards; popular grid 2-up; nav → Sheet; all modals → full-screen Sheets; scoring pad bottom-anchored, buttons ≥56px.</td></tr>
+    <tr><td>640–1024 (tablet)</td><td>Match cards 2-up; leaderboard table with horizontal scroll fallback; admin sidebar collapses to icon rail; scoring keeps 2-col if landscape.</td></tr>
+    <tr><td>&gt; 1024 (desktop)</td><td>Full layouts as drawn; modals centered Dialogs; home leader/popular split 5/7.</td></tr>
+  </table>
+
+  <h2>H · Modal behavior</h2>
+  <p>Desktop <code>Dialog</code> (radius 16, scrim rgba(10,15,35,.55), scale+fade 150ms) ⟷ mobile <code>Sheet</code> (full-screen for match/player details, bottom for wicket/confirm; drag-handle, slide-up 200ms). Tabs stay sticky inside sheets. Esc/scrim closes non-destructive modals only; confirm dialogs require explicit action.</p>
+
+  <h2>I · Empty / loading / error</h2>
+  <p>Every data view ships all three (drawn in Explorations §A): empty = icon disc + one sentence + next action; loading = skeletons matching final row geometry (never spinners for scores/tables); error = red-tinted card + Retry, live views auto-resume polling. Score digits reserve width so updates never shift layout.</p>
+
+  <h2>J · Accessibility</h2>
+  <ul>
+    <li>Team colors used behind text are contrast-checked at save time (Team form blocks &lt;4.5:1).</li>
+    <li>Status is never color-only: badges carry text, wickets carry "W", free hit has label + icon.</li>
+    <li><code>aria-live="polite"</code> on hero score + last-balls strip; ball dots get <code>aria-label</code> ("over 16.2: six").</li>
+    <li>Scoring pad: real buttons, focus rings, arrow-key roving focus, 0–6 as keyboard shortcuts; modals trap focus and return it.</li>
+    <li>LIVE pulse and entrance animations respect <code>prefers-reduced-motion</code>.</li>
+  </ul>
+
+  <h2>K · shadcn/ui mapping</h2>
+  <table>
+    <tr><th>Piece</th><th>shadcn</th></tr>
+    <tr><td>Match/player details</td><td><code>Dialog</code> desktop → <code>Sheet</code> mobile</td></tr>
+    <tr><td>Nav drawer, admin sidebar (mobile), wicket form</td><td><code>Sheet</code></td></tr>
+    <tr><td>Live/Upcoming/Previous · Batting/Bowling/Overall · modal tabs</td><td><code>Tabs</code></td></tr>
+    <tr><td>Leaderboard, scorecard, FoW, audit log</td><td><code>Table</code> (+ <code>ScrollArea</code> on tablet)</td></tr>
+    <tr><td>Cards, stat tiles</td><td><code>Card</code> · badges → <code>Badge</code> variants</td></tr>
+    <tr><td>Buttons incl. scoring pad</td><td><code>Button</code> (custom size "pad")</td></tr>
+    <tr><td>Forms</td><td><code>Form</code> + <code>Input</code>/<code>Select</code>/<code>Switch</code>/<code>RadioGroup</code>/<code>Textarea</code></td></tr>
+    <tr><td>Destructive confirms</td><td><code>AlertDialog</code></td></tr>
+    <tr><td>Saves, vote updates, undo feedback</td><td><code>Toast</code> (with Undo action)</td></tr>
+    <tr><td>Loading</td><td><code>Skeleton</code> · search → <code>Command</code> (player picker)</td></tr>
+    <tr><td>Theme toggle</td><td><code>DropdownMenu</code> (light/dark/system)</td></tr>
+  </table>
+
+  <h2>L · Final checklist</h2>
+  <ul class="check">
+    <li>☐ Tokens wired as CSS variables under <code>:root</code> / <code>.dark</code>, mapped in Tailwind config.</li>
+    <li>☐ tabular-nums + reserved widths on every live number.</li>
+    <li>☐ One-tap run logging verified on a 360px device, thumb-reachable.</li>
+    <li>☐ Free-hit state restricts wicket options end-to-end.</li>
+    <li>☐ Edit-ball recompute path confirmed + audit-logged; Undo limited to last ball.</li>
+    <li>☐ All Dialogs swap to Sheets &lt;640px.</li>
+    <li>☐ Empty/loading/error built for: hero, match lists, scorecard, leaderboard, popular, admin tables.</li>
+    <li>☐ Contrast pass on all team colors; <code>aria-live</code> on score; reduced-motion honored.</li>
+    <li>☐ Dark mode visual QA on hero, ball dots, gold highlights.</li>
+  </ul>
+</div>
+</body>
+</html>

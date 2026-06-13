@@ -34,3 +34,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# claude code (local tooling config)
+.claude/
+
+# private specs / instructions — keep out of the repo, but publish the deploy guide
+/docs/*
+!/docs/DEPLOY.md
+CLAUDE.md

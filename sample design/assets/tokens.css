@@ -1,0 +1,296 @@
+/* ============================================================
+   CSSA Cricket Fiesta '26 — Design Tokens & Core Components
+   3 palette variations × light/dark, scoped by [data-palette] and [data-mode]
+   Fonts: Barlow Condensed (display) + IBM Plex Sans (UI/body, tabular nums)
+   ============================================================ */
+
+.cf {
+  /* ---------- Shared neutrals (light) ---------- */
+  --success: #0E9F6E;
+  --danger:  #DC2626;
+  --live:    #E11D48;
+  --warn:    #D97706;
+
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+
+  --radius-sm: 6px;
+  --radius:    10px;
+  --radius-lg: 16px;
+  --shadow-card: 0 1px 2px rgba(16, 26, 58, .06), 0 4px 14px rgba(16, 26, 58, .06);
+  --shadow-pop:  0 8px 30px rgba(16, 26, 58, .18);
+
+  font-family: var(--font-body);
+  color: var(--text);
+  background: var(--background);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ============ PALETTE 1 · Royal Indigo × Gold (default) ============ */
+.cf[data-palette="indigo"][data-mode="light"], .cf[data-palette="indigo"]:not([data-mode]) {
+  --background: #F4F6FB;
+  --surface:    #FFFFFF;
+  --surface-2:  #EDF0F8;
+  --primary:    #4338CA;
+  --primary-soft: #EEF0FF;
+  --ink:        #101A3A;       /* deep navy — hero panels, headings */
+  --ink-2:      #1B2755;
+  --accent:     #0E7490;       /* teal-cyan, secondary actions/links */
+  --highlight:  #F59E0B;       /* gold — ranks, player of match */
+  --muted:      #5B6478;
+  --border:     #DDE2EE;
+  --text:       #18213B;
+  --text-muted: #5B6478;
+  --on-primary: #FFFFFF;
+  --on-ink:     #FFFFFF;
+  --on-ink-muted: #9AA6CC;
+  --hero-grad: linear-gradient(135deg, #101A3A 0%, #1B2755 55%, #312E81 100%);
+}
+.cf[data-palette="indigo"][data-mode="dark"] {
+  --background: #0B1126;
+  --surface:    #131B36;
+  --surface-2:  #1B2444;
+  --primary:    #818CF8;
+  --primary-soft: #232B52;
+  --ink:        #0E1530;
+  --ink-2:      #1B2755;
+  --accent:     #22D3EE;
+  --highlight:  #FBBF24;
+  --muted:      #8D97B8;
+  --border:     #273158;
+  --text:       #E7EAF6;
+  --text-muted: #98A2C4;
+  --on-primary: #0B1126;
+  --on-ink:     #FFFFFF;
+  --on-ink-muted: #9AA6CC;
+  --success: #34D399; --danger: #F87171; --live: #FB7185; --warn: #FBBF24;
+  --shadow-card: 0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.35);
+  --hero-grad: linear-gradient(135deg, #0E1530 0%, #1B2755 55%, #2A2E6E 100%);
+}
+
+/* ============ PALETTE 2 · Stadium Navy × Emerald ============ */
+.cf[data-palette="navy"][data-mode="light"], .cf[data-palette="navy"]:not([data-mode]) {
+  --background: #F3F6F9;
+  --surface:    #FFFFFF;
+  --surface-2:  #EAEFF5;
+  --primary:    #1D4ED8;
+  --primary-soft: #E8EEFE;
+  --ink:        #0B1B33;
+  --ink-2:      #122A4D;
+  --accent:     #0E9F6E;
+  --highlight:  #EAB308;
+  --muted:      #5A6B80;
+  --border:     #D9E1EB;
+  --text:       #122033;
+  --text-muted: #5A6B80;
+  --on-primary: #FFFFFF;
+  --on-ink:     #FFFFFF;
+  --on-ink-muted: #8FA5C4;
+  --hero-grad: linear-gradient(135deg, #0B1B33 0%, #122A4D 55%, #14532D 130%);
+}
+.cf[data-palette="navy"][data-mode="dark"] {
+  --background: #081222;
+  --surface:    #0F1D33;
+  --surface-2:  #16263F;
+  --primary:    #60A5FA;
+  --primary-soft: #1B2F4D;
+  --ink:        #0A1729;
+  --ink-2:      #122A4D;
+  --accent:     #34D399;
+  --highlight:  #FACC15;
+  --muted:      #8CA0BC;
+  --border:     #22354F;
+  --text:       #E5EDF7;
+  --text-muted: #93A7C3;
+  --on-primary: #081222;
+  --on-ink:     #FFFFFF;
+  --on-ink-muted: #8FA5C4;
+  --success: #34D399; --danger: #F87171; --live: #FB7185; --warn: #FBBF24;
+  --shadow-card: 0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.35);
+  --hero-grad: linear-gradient(135deg, #0A1729 0%, #122A4D 60%, #0E3A2C 130%);
+}
+
+/* ============ PALETTE 3 · Fiesta — Cerulean × Sunset (logo-led) ============ */
+.cf[data-palette="fiesta"][data-mode="light"], .cf[data-palette="fiesta"]:not([data-mode]) {
+  --background: #F5F7FC;
+  --surface:    #FFFFFF;
+  --surface-2:  #EDF1F9;
+  --primary:    #0369A1;
+  --primary-soft: #E3F2FD;
+  --ink:        #142046;
+  --ink-2:      #1D2E63;
+  --accent:     #DB2777;
+  --highlight:  #F97316;
+  --muted:      #5E6883;
+  --border:     #DCE2EF;
+  --text:       #1A2342;
+  --text-muted: #5E6883;
+  --on-primary: #FFFFFF;
+  --on-ink:     #FFFFFF;
+  --on-ink-muted: #9DA9D6;
+  --hero-grad: linear-gradient(135deg, #142046 0%, #1D2E63 50%, #7C2D8E 130%);
+}
+.cf[data-palette="fiesta"][data-mode="dark"] {
+  --background: #0C1228;
+  --surface:    #151D3A;
+  --surface-2:  #1D2648;
+  --primary:    #38BDF8;
+  --primary-soft: #1B2C52;
+  --ink:        #101736;
+  --ink-2:      #1D2E63;
+  --accent:     #F472B6;
+  --highlight:  #FB923C;
+  --muted:      #949DC0;
+  --border:     #2A3460;
+  --text:       #E9ECF8;
+  --text-muted: #9BA5CA;
+  --on-primary: #0C1228;
+  --on-ink:     #FFFFFF;
+  --on-ink-muted: #9DA9D6;
+  --success: #34D399; --danger: #F87171; --live: #FB7185; --warn: #FBBF24;
+  --shadow-card: 0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.35);
+  --hero-grad: linear-gradient(135deg, #101736 0%, #1D2E63 50%, #6B2370 130%);
+}
+
+/* ============================================================
+   Typography
+   ============================================================ */
+.cf h1, .cf h2, .cf h3, .cf .h-display { margin: 0; font-family: var(--font-display); }
+.cf .t-display { font-family: var(--font-display); font-weight: 700; font-size: 36px; line-height: 1.05; letter-spacing: .2px; }
+.cf .t-h2 { font-family: var(--font-display); font-weight: 600; font-size: 26px; line-height: 1.1; }
+.cf .t-h3 { font-family: var(--font-display); font-weight: 600; font-size: 20px; line-height: 1.15; }
+.cf .t-body { font-size: 14.5px; line-height: 1.5; }
+.cf .t-small { font-size: 13px; line-height: 1.45; }
+.cf .t-label { font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--text-muted); }
+.cf .t-num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+.cf .t-score-xl { font-family: var(--font-display); font-weight: 700; font-size: 64px; line-height: 1; letter-spacing: .5px; font-variant-numeric: tabular-nums; }
+.cf .t-score-lg { font-family: var(--font-display); font-weight: 700; font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; }
+.cf .t-score-md { font-family: var(--font-display); font-weight: 700; font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; }
+
+/* ============================================================
+   Surfaces & layout helpers
+   ============================================================ */
+.cf .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); }
+.cf .row { display: flex; align-items: center; }
+.cf .divider { height: 1px; background: var(--border); }
+
+/* ============================================================
+   Status badges
+   ============================================================ */
+.cf .badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; line-height: 1.6; white-space: nowrap; }
+.cf .badge-live { background: var(--live); color: #fff; }
+.cf .badge-live .pulse { width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: cf-pulse 1.4s ease-in-out infinite; }
+@keyframes cf-pulse { 0%,100% { opacity: 1; transform: scale(1);} 50% { opacity: .45; transform: scale(.72);} }
+.cf .badge-upcoming  { background: var(--primary-soft); color: var(--primary); }
+.cf .badge-completed { background: color-mix(in oklab, var(--success) 14%, transparent); color: var(--success); }
+.cf .badge-break     { background: color-mix(in oklab, var(--warn) 16%, transparent); color: var(--warn); }
+.cf .badge-abandoned { background: var(--surface-2); color: var(--text-muted); }
+.cf .badge-freehit   { background: var(--highlight); color: #1F1500; }
+
+/* ============================================================
+   Ball dots (0 1 2 3 4 6 W WD NB) — color-coded
+   ============================================================ */
+.cf .ball { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; flex: none;
+  background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
+.cf .ball-run  { background: var(--surface-2); color: var(--text); border-color: var(--border); }
+.cf .ball-four { background: #2563EB; color: #fff; border-color: transparent; }
+.cf .ball-six  { background: #7C3AED; color: #fff; border-color: transparent; }
+.cf .ball-w    { background: var(--danger); color: #fff; border-color: transparent; }
+.cf .ball-wd, .cf .ball-nb { background: color-mix(in oklab, var(--warn) 18%, transparent); color: var(--warn); border-color: color-mix(in oklab, var(--warn) 40%, transparent); }
+.cf .ball-sm { width: 22px; height: 22px; font-size: 10.5px; }
+.cf .ball-strip { display: flex; gap: 6px; align-items: center; }
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+.cf .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: var(--radius);
+  font-family: var(--font-body); font-size: 13.5px; font-weight: 600; padding: 9px 16px; line-height: 1.2;
+  border: 1px solid transparent; cursor: pointer; user-select: none; }
+.cf .btn-primary { background: var(--primary); color: var(--on-primary); }
+.cf .btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
+.cf .btn-soft { background: var(--primary-soft); color: var(--primary); }
+.cf .btn-danger { background: var(--danger); color: #fff; }
+.cf .btn-sm { padding: 6px 12px; font-size: 12.5px; border-radius: 8px; }
+.cf .btn-lg { padding: 13px 22px; font-size: 15px; border-radius: 12px; }
+
+/* ============================================================
+   Tabs (shadcn Tabs analogue)
+   ============================================================ */
+.cf .tabs { display: inline-flex; background: var(--surface-2); border-radius: 10px; padding: 3px; gap: 2px; }
+.cf .tab { padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+.cf .tab[data-active] { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(16,26,58,.12); }
+.cf .tabs-underline { display: flex; gap: 4px; border-bottom: 1px solid var(--border); background: none; padding: 0; border-radius: 0; }
+.cf .tabs-underline .tab { border-radius: 8px 8px 0 0; padding: 10px 14px; }
+.cf .tabs-underline .tab[data-active] { background: none; box-shadow: inset 0 -2px 0 var(--primary); color: var(--primary); }
+
+/* ============================================================
+   Team chips, avatars, logos (placeholders)
+   ============================================================ */
+.cf .tlogo { width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 13px; color: #fff; flex: none; letter-spacing: .03em; }
+.cf .tlogo-lg { width: 52px; height: 52px; font-size: 19px; }
+.cf .tlogo-sm { width: 22px; height: 22px; font-size: 9px; }
+.cf .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border);
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: var(--text-muted); flex: none; }
+
+/* ============================================================
+   Tables
+   ============================================================ */
+.cf table.stat { width: 100%; border-collapse: collapse; font-size: 13px; }
+.cf table.stat th { text-align: left; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--text-muted); padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.cf table.stat td { padding: 9px 10px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+.cf table.stat tr:last-child td { border-bottom: none; }
+.cf table.stat .num { text-align: right; }
+.cf table.stat th.num { text-align: right; }
+.cf table.stat .hl td { background: var(--primary-soft); }
+
+/* ============================================================
+   Inputs
+   ============================================================ */
+.cf .input { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 9px 12px; font-size: 13.5px; color: var(--text); }
+.cf .input.is-error { border-color: var(--danger); box-shadow: 0 0 0 3px color-mix(in oklab, var(--danger) 14%, transparent); }
+.cf .input .ph { color: var(--text-muted); }
+.cf .field-label { font-size: 12.5px; font-weight: 600; margin-bottom: 6px; display: block; }
+.cf .field-error { font-size: 12px; color: var(--danger); margin-top: 5px; }
+.cf .field-hint { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
+
+/* ============================================================
+   Skeletons
+   ============================================================ */
+.cf .skl { background: linear-gradient(90deg, var(--surface-2) 25%, color-mix(in oklab, var(--surface-2) 55%, var(--surface)) 50%, var(--surface-2) 75%);
+  background-size: 200% 100%; animation: cf-shimmer 1.6s linear infinite; border-radius: 6px; }
+@keyframes cf-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* ============================================================
+   Misc
+   ============================================================ */
+.cf .kbd { font-size: 11px; font-weight: 600; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 5px;
+  padding: 1px 6px; background: var(--surface); color: var(--text-muted); }
+.cf .dot-sep { width: 3px; height: 3px; border-radius: 50%; background: var(--text-muted); opacity: .6; flex: none; }
+
+/* ============================================================
+   Swipeable carousel (Matches) + sponsor slots
+   ============================================================ */
+.cf .swipe { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.cf .swipe::-webkit-scrollbar { height: 0; width: 0; display: none; }
+.cf .swipe > .slide { flex: 0 0 100%; scroll-snap-align: center; min-width: 0; }
+.cf .arrow-btn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); }
+.cf .arrow-btn:hover { background: var(--surface-2); }
+.cf .sponsor-tag { position: absolute; top: 9px; left: 11px; font-size: 8.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); }
+
+/* ============================================================
+   Role indicator badge (bat / ball / fielding)
+   ============================================================ */
+.cf .role-av { position: relative; display: inline-flex; flex: none; }
+.cf .role-badge { position: absolute; right: -2px; bottom: -2px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; border: 2px solid var(--surface); box-shadow: 0 1px 2px rgba(16,26,58,.25); }
+.cf .role-badge.bat { background: var(--primary); }
+.cf .role-badge.ball { background: var(--accent); }
+.cf .role-disc { border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none; color: #fff; }
+.cf .role-disc.bat { background: var(--primary); }
+.cf .role-disc.ball { background: var(--accent); }
+.cf .role-disc.field { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }

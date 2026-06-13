@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cricket Fiesta '26 — Design Explorations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<style>
+  html, body { margin: 0; padding: 0; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="lib/design-canvas.jsx"></script>
+<script type="text/babel" src="lib/tweaks-panel.jsx"></script>
+<script type="text/babel" src="boards/shared.jsx"></script>
+<script type="text/babel" src="boards/foundations.jsx"></script>
+<script type="text/babel" src="boards/home.jsx"></script>
+<script type="text/babel" src="boards/match.jsx"></script>
+<script type="text/babel" src="boards/leaderboard.jsx"></script>
+<script type="text/babel" src="boards/admin.jsx"></script>
+<script type="text/babel" src="boards/admin-kit.jsx"></script>
+<script type="text/babel" src="boards/admin-teams.jsx"></script>
+<script type="text/babel" src="boards/admin-players.jsx"></script>
+<script type="text/babel" src="boards/admin-matches.jsx"></script>
+<script type="text/babel" src="boards/admin-content.jsx"></script>
+<script type="text/babel" src="boards/admin-system.jsx"></script>
+<script type="text/babel" src="boards/scoring.jsx"></script>
+<script type="text/babel">
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "palette": "fiesta",
+  "dark": false
+}/*EDITMODE-END*/;
+
+const PALETTE_LABELS = { indigo: "Indigo · Gold", navy: "Navy · Emerald", fiesta: "Fiesta · Sunset" };
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const mode = t.dark ? "dark" : "light";
+  const Frame = ({ children }) => (
+    <div className="cf" data-palette={t.palette} data-mode={mode} style={{ width: "100%", height: "100%", background: "var(--background)" }}>{children}</div>
+  );
+  const Neutral = ({ children }) => (
+    <div className="cf" data-palette={t.palette} data-mode="light" style={{ width: "100%", height: "100%", background: "var(--surface)" }}>{children}</div>
+  );
+  return (
+    <React.Fragment>
+      <DesignCanvas>
+        <DCSection id="foundations" title="A · Foundations" subtitle="3 palette directions (pick one in Tweaks ↗), typography, core components — every mockup below re-skins live">
+          <DCPostIt>
+            Built for CSSA Cricket Fiesta '26.
+            Blue-led, light by default.
+            Palette + dark mode switch in the Tweaks panel — all screens update.
+          </DCPostIt>
+          <DCArtboard id="pal-1" label="Palette 1 · Royal Indigo × Gold" width={720} height={628}>
+            <Neutral><PaletteCard palette="indigo" title="Royal Indigo × Gold" recommended note="Your chosen blue. Deep navy ink for hero panels, indigo for actions, gold reserved for ranks, player-of-match and the free-hit state." /></Neutral>
+          </DCArtboard>
+          <DCArtboard id="pal-2" label="Palette 2 · Stadium Navy × Emerald" width={720} height={628}>
+            <Neutral><PaletteCard palette="navy" title="Stadium Navy × Emerald" note="The brief's original direction — classic broadcast navy with emerald for success and momentum. Most conservative of the three." /></Neutral>
+          </DCArtboard>
+          <DCArtboard id="pal-3" label="Palette 3 · Fiesta · Cerulean × Sunset" width={720} height={628}>
+            <Neutral><PaletteCard palette="fiesta" title="Fiesta — Cerulean × Sunset" note="Pulled from the watercolor logo — cerulean blue with sunset orange + magenta accents. Most festive; accents stay rare so scores keep the stage." /></Neutral>
+          </DCArtboard>
+          <DCArtboard id="type" label="Typography — Barlow Condensed + IBM Plex Sans" width={780} height={620}>
+            <Frame><TypographyBoard /></Frame>
+          </DCArtboard>
+          <DCArtboard id="components" label="Core components" width={800} height={1012}>
+            <Frame><ComponentsBoard /></Frame>
+          </DCArtboard>
+          <DCArtboard id="states" label="Empty · Loading · Error states" width={1000} height={300}>
+            <Frame><StatesBoard /></Frame>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="home" title="B · Home — public" subtitle="LiveMatchHero is the anchor · desktop 1280 / mobile 390">
+          <DCArtboard id="home-desktop" label="Home · Desktop 1280" width={1280} height={2360}>
+            <Frame><HomeDesktop /></Frame>
+          </DCArtboard>
+          <DCArtboard id="home-mobile" label="Home · Mobile 390" width={390} height={3040}>
+            <Frame><HomeMobile /></Frame>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="match" title="C · Match details" subtitle="Desktop Dialog (Scorecard tab) · mobile full-screen Sheet (Summary + ball-by-ball)">
+          <DCArtboard id="match-desktop" label="Match Dialog · Desktop (Scorecard tab)" width={1100} height={1068}>
+            <Frame><MatchModalDesktop /></Frame>
+          </DCArtboard>
+          <DCArtboard id="match-mobile" label="Match Sheet · Mobile (Summary tab)" width={390} height={760}>
+            <Frame><MatchSheetMobile /></Frame>
+          </DCArtboard>
+          <DCArtboard id="fow" label="Fall of Wickets tab" width={860} height={260}>
+            <Frame><FowBoard /></Frame>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="leaderboard" title="D · Leaderboard & players" subtitle="Desktop table → mobile ranking cards with expandable details">
+          <DCArtboard id="lb-desktop" label="Leaderboard · Desktop (Batting)" width={1280} height={740}>
+            <Frame><LeaderboardDesktop /></Frame>
+          </DCArtboard>
+          <DCArtboard id="lb-mobile" label="Leaderboard · Mobile cards (row 3 expanded)" width={390} height={840}>
+            <Frame><LeaderboardMobile /></Frame>
+          </DCArtboard>
+          <DCArtboard id="player-modal" label="Player detail modal · Desktop" width={1000} height={864}>
+            <Frame><PlayerModalDesktop /></Frame>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="admin" title="E · Admin overview" subtitle="Sidebar console — dark ink chrome to feel distinct from the public site">
+          <DCArtboard id="admin-dash" label="Admin Dashboard · Desktop" width={1280} height={700}>
+            <Frame><AdminDashboard /></Frame>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="scoring" title="F · Live scoring console" subtitle="Common path = one tap · free hit restricts wickets · edit ≠ undo">
+          <DCPostIt>
+            Scorer works on a phone at the ground —
+            mobile pad sits in the thumb zone,
+            undo always within reach.
+          </DCPostIt>
+          <DCArtboard id="score-desktop" label="Live Scoring · Desktop" width={1280} height={960}>
+            <Frame><ScoringDesktop /></Frame>
+          </DCArtboard>
+          <DCArtboard id="score-mobile" label="Live Scoring · Mobile 390" width={390} height={1232}>
+            <Frame><ScoringMobile /></Frame>
+          </DCArtboard>
+          <DCArtboard id="wicket-mobile" label="Wicket dialog · Mobile Sheet" width={390} height={780}>
+            <Frame><WicketDialogMobile /></Frame>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="admin-manage" title="G · Admin — full management" subtitle="Every entity is admin-editable: teams, players, matches, venues, sponsors/ads, votes, users & settings">
+          <DCPostIt>
+            Everything the admin touches.
+            List → edit pattern, full forms,
+            validation, and admin-loaded ads.
+          </DCPostIt>
+          <DCArtboard id="adm-teams" label="Teams · list" width={1280} height={620}>
+            <Frame><TeamsListScreen /></Frame>
+          </DCArtboard>
+          <DCArtboard id="adm-team-edit" label="Team · full editor (identity, colors, venue, squad)" width={1280} height={1110}>
+            <Frame><TeamEditScreen /></Frame>
+          </DCArtboard>
+          <DCArtboard id="adm-players" label="Players · list (search & filter)" width={1280} height={716}>
+            <Frame><PlayersListScreen /></Frame>
+          </DCArtboard>
+          <DCArtboard id="adm-player-edit" label="Player · full editor (role, styles, votes)" width={1280} height={904}>
+            <Frame><PlayerEditScreen /></Frame>
+          </DCArtboard>
+          <DCArtboard id="adm-matches" label="Matches · list" width={1280} height={620}>
+            <Frame><MatchesListScreen /></Frame>
+          </DCArtboard>
+          <DCArtboard id="adm-match-edit" label="Match · editor (venue select + Playing XI)" width={1280} height={1200}>
+            <Frame><MatchEditScreen /></Frame>
+          </DCArtboard>
+          <DCArtboard id="adm-venues" label="Venues · admin selects the place" width={1280} height={704}>
+            <Frame><VenuesScreen /></Frame>
+          </DCArtboard>
+          <DCArtboard id="adm-sponsors" label="Sponsors & Ads · admin loads ad creatives" width={1280} height={1260}>
+            <Frame><SponsorsAdsScreen /></Frame>
+          </DCArtboard>
+          <DCArtboard id="adm-votes" label="Popular vote · adjust counts & rules" width={1280} height={680}>
+            <Frame><PopularVotesScreen /></Frame>
+          </DCArtboard>
+          <DCArtboard id="adm-rebuild" label="Leaderboard · rebuild engine" width={1280} height={612}>
+            <Frame><LeaderboardRebuildScreen /></Frame>
+          </DCArtboard>
+          <DCArtboard id="adm-users" label="Admin users · roles & permissions" width={1280} height={896}>
+            <Frame><AdminUsersScreen /></Frame>
+          </DCArtboard>
+          <DCArtboard id="adm-logs" label="Audit logs" width={1280} height={680}>
+            <Frame><AuditLogsScreen /></Frame>
+          </DCArtboard>
+          <DCArtboard id="adm-settings" label="Tournament settings" width={1280} height={900}>
+            <Frame><SettingsScreen /></Frame>
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+
+      <TweaksPanel>
+        <TweakSection label="Palette" />
+        <TweakRadio label="Direction" value={t.palette} options={["indigo", "navy", "fiesta"]}
+          onChange={(v) => setTweak("palette", v)} />
+        <TweakToggle label="Dark mode" value={t.dark} onChange={(v) => setTweak("dark", v)} />
+      </TweaksPanel>
+    </React.Fragment>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

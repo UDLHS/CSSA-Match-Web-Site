@@ -1,0 +1,272 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================================
+   CSSA Cricket Fiesta '26 — Royal Indigo × Gold (Palette 1)
+   Source of truth: docs/design-spec.md + sample design/assets/tokens.css
+   NO component may hardcode hex — always go through these tokens.
+   ============================================================ */
+
+:root {
+  --background: #f4f6fb;
+  --surface: #ffffff;
+  --surface-2: #edf0f8;
+  --primary: #4338ca;
+  --primary-soft: #eef0ff;
+  --ink: #101a3a;
+  --ink-2: #1b2755;
+  --accent: #0e7490;
+  --highlight: #f59e0b;
+  --success: #0e9f6e;
+  --danger: #dc2626;
+  --live: #e11d48;
+  --warn: #d97706;
+  --muted: #5b6478;
+  --border: #dde2ee;
+  --text: #18213b;
+  --on-primary: #ffffff;
+  --on-ink: #ffffff;
+  --on-ink-muted: #9aa6cc;
+
+  /* Ball-dot colors — fixed in BOTH themes (design spec) */
+  --ball-four: #2563eb;
+  --ball-six: #7c3aed;
+
+  --hero-grad: linear-gradient(135deg, #101a3a 0%, #1b2755 55%, #312e81 100%);
+
+  --shadow-card:
+    0 1px 2px rgba(16, 26, 58, 0.06), 0 4px 14px rgba(16, 26, 58, 0.06);
+  --shadow-pop: 0 8px 30px rgba(16, 26, 58, 0.18);
+}
+
+.dark {
+  --background: #0b1126;
+  --surface: #131b36;
+  --surface-2: #1b2444;
+  --primary: #818cf8;
+  --primary-soft: #232b52;
+  --ink: #0e1530;
+  --ink-2: #1b2755;
+  --accent: #22d3ee;
+  --highlight: #fbbf24;
+  --success: #34d399;
+  --danger: #f87171;
+  --live: #fb7185;
+  --warn: #fbbf24;
+  --muted: #98a2c4;
+  --border: #273158;
+  --text: #e7eaf6;
+  --on-primary: #0b1126;
+  --on-ink: #ffffff;
+  --on-ink-muted: #9aa6cc;
+
+  --hero-grad: linear-gradient(135deg, #0e1530 0%, #1b2755 55%, #2a2e6e 100%);
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.35);
+  --shadow-pop: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+@theme inline {
+  /* semantic colors → Tailwind utilities (bg-surface, text-muted, …) */
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-primary: var(--primary);
+  --color-primary-soft: var(--primary-soft);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-accent: var(--accent);
+  --color-highlight: var(--highlight);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-live: var(--live);
+  --color-warn: var(--warn);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-foreground: var(--text);
+  --color-on-primary: var(--on-primary);
+  --color-on-ink: var(--on-ink);
+  --color-on-ink-muted: var(--on-ink-muted);
+  --color-ball-four: var(--ball-four);
+  --color-ball-six: var(--ball-six);
+
+  /* fonts (loaded via next/font in app/layout.tsx) */
+  --font-display: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  --font-sans: var(--font-ibm-plex-sans), "Segoe UI", system-ui, sans-serif;
+
+  /* radius: 16px cards / 10px controls / 6px small */
+  --radius-card: 16px;
+  --radius-control: 10px;
+  --radius-small: 6px;
+
+  --shadow-card: var(--shadow-card);
+  --shadow-pop: var(--shadow-pop);
+}
+
+@layer base {
+  body {
+    background: var(--background);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+@utility hero-gradient {
+  background-image: var(--hero-grad);
+}
+
+/* Live-updating numbers: tabular digits, zero layout shift */
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Skeleton shimmer (loading states use skeletons, never spinners) */
+@utility skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 25%,
+    color-mix(in oklab, var(--surface-2) 55%, var(--surface)) 50%,
+    var(--surface-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: cf-shimmer 1.6s linear infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes cf-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes cf-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.72);
+  }
+}
+
+/* ============================================================
+   Component layer — 1:1 port of sample design/assets/tokens.css
+   (the boards in sample design/boards/ are the visual truth).
+   Every color flows through the tokens above; no raw hex.
+   ============================================================ */
+@layer components {
+  /* ---- typography scale ---- */
+  .t-display { font-family: var(--font-display); font-weight: 700; font-size: 36px; line-height: 1.05; letter-spacing: 0.2px; }
+  .t-h2 { font-family: var(--font-display); font-weight: 600; font-size: 26px; line-height: 1.1; }
+  .t-h3 { font-family: var(--font-display); font-weight: 600; font-size: 20px; line-height: 1.15; }
+  .t-body { font-size: 14.5px; line-height: 1.5; }
+  .t-small { font-size: 13px; line-height: 1.45; }
+  .t-label { font-size: 11px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
+  .t-num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+  .t-score-xl { font-family: var(--font-display); font-weight: 700; font-size: 64px; line-height: 1; letter-spacing: 0.5px; font-variant-numeric: tabular-nums; }
+  .t-score-lg { font-family: var(--font-display); font-weight: 700; font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .t-score-md { font-family: var(--font-display); font-weight: 700; font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; }
+
+  /* ---- surfaces & helpers ---- */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow-card); }
+  .row { display: flex; align-items: center; }
+  .divider { height: 1px; background: var(--border); }
+  .dot-sep { width: 3px; height: 3px; border-radius: 50%; background: var(--muted); opacity: 0.6; flex: none; }
+
+  /* ---- status badges ---- */
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.6; white-space: nowrap; }
+  .badge-live { background: var(--live); color: var(--on-ink); }
+  .badge-live .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--on-ink); animation: cf-pulse 1.4s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) { .badge-live .pulse { animation: none; } }
+  .badge-upcoming { background: var(--primary-soft); color: var(--primary); }
+  .badge-completed { background: color-mix(in oklab, var(--success) 14%, transparent); color: var(--success); }
+  .badge-break { background: color-mix(in oklab, var(--warn) 16%, transparent); color: var(--warn); }
+  .badge-abandoned { background: var(--surface-2); color: var(--muted); }
+  .badge-freehit { background: var(--highlight); color: var(--ink); }
+
+  /* ---- ball dots (0 1 2 3 4 6 W WD NB) ---- */
+  .ball { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; flex: none; background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
+  .ball-run { background: var(--surface-2); color: var(--text); border-color: var(--border); }
+  .ball-four { background: var(--ball-four); color: #fff; border-color: transparent; }
+  .ball-six { background: var(--ball-six); color: #fff; border-color: transparent; }
+  .ball-w { background: var(--danger); color: #fff; border-color: transparent; }
+  .ball-wd, .ball-nb { background: color-mix(in oklab, var(--warn) 18%, transparent); color: var(--warn); border-color: color-mix(in oklab, var(--warn) 40%, transparent); }
+  .ball-sm { width: 22px; height: 22px; font-size: 10.5px; }
+  .ball-strip { display: flex; gap: 6px; align-items: center; }
+
+  /* ---- buttons ---- */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; font-family: var(--font-sans); font-size: 13.5px; font-weight: 600; padding: 9px 16px; line-height: 1.2; border: 1px solid transparent; cursor: pointer; user-select: none; }
+  .btn-primary { background: var(--primary); color: var(--on-primary); }
+  .btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
+  .btn-soft { background: var(--primary-soft); color: var(--primary); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; border-radius: 8px; }
+  .btn-lg { padding: 13px 22px; font-size: 15px; border-radius: 12px; }
+  .btn-gold { background: var(--highlight); color: var(--ink); font-weight: 700; }
+
+  /* ---- tabs ---- */
+  .tabs { display: inline-flex; background: var(--surface-2); border-radius: 10px; padding: 3px; gap: 2px; }
+  .tab { padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; white-space: nowrap; border: none; background: none; font-family: inherit; }
+  .tab[data-active] { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(16, 26, 58, 0.12); }
+  .tabs-underline { display: flex; gap: 4px; border-bottom: 1px solid var(--border); background: none; padding: 0; border-radius: 0; }
+  .tabs-underline .tab { border-radius: 8px 8px 0 0; padding: 10px 14px; }
+  .tabs-underline .tab[data-active] { background: none; box-shadow: inset 0 -2px 0 var(--primary); color: var(--primary); }
+
+  /* ---- team logos & avatars ---- */
+  .tlogo { width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 13px; color: #fff; flex: none; letter-spacing: 0.03em; overflow: hidden; }
+  .tlogo-lg { width: 52px; height: 52px; font-size: 19px; }
+  .tlogo-sm { width: 22px; height: 22px; font-size: 9px; }
+  .avatar { border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; color: var(--muted); flex: none; overflow: hidden; }
+
+  /* ---- role indicator (bat / ball / field) ---- */
+  .role-av { position: relative; display: inline-flex; flex: none; }
+  .role-badge { position: absolute; right: -2px; bottom: -2px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; border: 2px solid var(--surface); box-shadow: 0 1px 2px rgba(16, 26, 58, 0.25); }
+  .role-badge.bat { background: var(--primary); }
+  .role-badge.ball { background: var(--accent); }
+  .role-disc { border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none; color: #fff; }
+  .role-disc.bat { background: var(--primary); }
+  .role-disc.ball { background: var(--accent); }
+  .role-disc.field { background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
+
+  /* ---- stat tables ---- */
+  table.stat { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.stat th { text-align: left; font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  table.stat td { padding: 9px 10px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+  table.stat tr:last-child td { border-bottom: none; }
+  table.stat .num { text-align: right; }
+  table.stat th.num { text-align: right; }
+  table.stat .hl td { background: var(--primary-soft); }
+
+  /* ---- inputs ---- */
+  .input { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; font-size: 13.5px; color: var(--text); }
+  .input input { background: none; border: none; outline: none; color: inherit; font: inherit; width: 100%; }
+  .input input::placeholder { color: var(--muted); }
+  .input select { background: none; border: none; outline: none; color: inherit; font: inherit; width: 100%; appearance: none; }
+
+  /* ---- skeletons ---- */
+  .skl { background: linear-gradient(90deg, var(--surface-2) 25%, color-mix(in oklab, var(--surface-2) 55%, var(--surface)) 50%, var(--surface-2) 75%); background-size: 200% 100%; animation: cf-shimmer 1.6s linear infinite; border-radius: 6px; }
+  @media (prefers-reduced-motion: reduce) { .skl { animation: none; } }
+
+  /* ---- swipeable carousel + sponsor slots ---- */
+  .swipe { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .swipe::-webkit-scrollbar { height: 0; width: 0; display: none; }
+  .swipe > .slide { flex: 0 0 100%; scroll-snap-align: center; min-width: 0; }
+  .arrow-btn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); padding: 0; }
+  .arrow-btn:hover { background: var(--surface-2); }
+  .sponsor-tag { position: absolute; top: 9px; left: 11px; font-size: 8.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .sponsor-slot-bg { background-image: repeating-linear-gradient(135deg, transparent 0 14px, color-mix(in oklab, var(--surface-2) 60%, transparent) 14px 15px); }
+
+  /* ---- modal overlay ---- */
+  .overlay { position: fixed; inset: 0; background: rgba(10, 15, 35, 0.55); backdrop-filter: blur(2px); z-index: 50; }
+}
