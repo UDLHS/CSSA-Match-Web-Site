@@ -99,9 +99,17 @@ export function MatchesCarousel({
         </span>
       </div>
 
-      <div ref={ref} className="swipe" onScroll={onScroll} style={{ margin: "0 -4px", padding: "0 4px" }}>
+      {/* Fixed-height carousel: each tab's cards scroll vertically INSIDE
+          this box, so the empty tab doesn't push the leaderboard far down
+          and the long Previous tab doesn't make the page feel endless. */}
+      <div
+        ref={ref}
+        className="swipe matches-swipe"
+        onScroll={onScroll}
+        style={{ margin: "0 -4px", padding: "0 4px" }}
+      >
         {slides.map((cards, i) => (
-          <div key={tabs[i]} className="slide">
+          <div key={tabs[i]} className="slide matches-slide">
             {cards.length === 0 ? (
               <div className="card" style={{ padding: 22, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, textAlign: "center" }}>
                 <span style={{ width: 40, height: 40, borderRadius: "50%", background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted)" }}>

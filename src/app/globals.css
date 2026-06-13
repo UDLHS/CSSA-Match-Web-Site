@@ -259,11 +259,24 @@
   @media (prefers-reduced-motion: reduce) { .skl { animation: none; } }
 
   /* ---- swipeable carousel + sponsor slots ---- */
-  .swipe { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none; align-items: flex-start; }
+  .swipe { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none; align-items: stretch; }
   .swipe::-webkit-scrollbar { height: 0; width: 0; display: none; }
-  /* Each slide takes the carousel width but only the height of its own content,
-     so an empty "no live matches" tab doesn't leave a huge gap. */
-  .swipe > .slide { flex: 0 0 100%; scroll-snap-align: center; min-width: 0; align-self: flex-start; }
+  .swipe > .slide { flex: 0 0 100%; scroll-snap-align: center; min-width: 0; }
+
+  /* Matches carousel — a fixed-height box whose CARDS scroll vertically
+     inside each tab, so the leaderboard below is always one short scroll
+     away (especially on mobile). */
+  .matches-swipe {
+    height: clamp(340px, 60dvh, 520px);
+  }
+  .matches-slide {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    padding-bottom: 4px;
+  }
+  .matches-slide::-webkit-scrollbar { width: 6px; }
+  .matches-slide::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
   .arrow-btn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); padding: 0; }
   .arrow-btn:hover { background: var(--surface-2); }
   .sponsor-tag { position: absolute; top: 9px; left: 11px; font-size: 8.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
