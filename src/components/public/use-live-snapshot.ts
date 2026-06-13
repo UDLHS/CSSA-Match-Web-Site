@@ -18,6 +18,20 @@ export function useLiveSnapshot(initial: LiveSnapshotRead | null) {
   const [degraded, setDegraded] = useState(false);
   const lastEventAt = useRef(Date.now());
 
+  // When the parent server component re-renders with a different `initial`
+  // (e.g. the home page's "featured match" changes from upcoming to live), or
+  // a strictly newer version arrives, swap to it. Otherwise the hook would
+  // stay frozen on the first render's snapshot.
+  useEffect(() => {
+    if (!initial) {
+      if (snap) setSnap(null);
+      return;
+    }
+    if (!snap || initial.matchId !== snap.matchId || initial.version > snap.version) {
+      setSnap(initial);
+    }
+  }, [initial, snap]);
+
   const matchId = snap?.matchId;
   const inPlay = snap?.status === "LIVE" || snap?.status === "INNINGS_BREAK";
 

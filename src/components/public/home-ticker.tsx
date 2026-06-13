@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
  *  - a match starting moves Upcoming → Live without a manual reload,
  *  - leaderboard numbers refresh as completions land.
  */
-export function HomeTicker({ intervalMs = 8000 }: { intervalMs?: number }) {
+export function HomeTicker({ intervalMs = 4000 }: { intervalMs?: number }) {
   const router = useRouter();
   useEffect(() => {
     const id = setInterval(() => {
