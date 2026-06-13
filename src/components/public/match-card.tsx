@@ -4,15 +4,24 @@ import type { LiveSnapshotRead, SnapshotTeam } from "@/lib/live-types";
 import { fmtDateShort, fmtDateTime } from "@/lib/format";
 import { StatusBadge, TeamLogo, type BadgeStatus } from "./atoms";
 import { ChevR } from "./icons";
+import { useLiveSnapshot } from "./use-live-snapshot";
 
-/** One match card (boards/home.jsx → MatchCard), fed by a ScoreSnapshot. */
+/**
+ * One match card (boards/home.jsx → MatchCard), fed by a ScoreSnapshot.
+ *
+ * For matches in play (LIVE / INNINGS_BREAK) the card subscribes to the same
+ * SSE stream as the hero so the score updates ball-by-ball — without any
+ * extra polling on the home page itself.
+ */
 export function MatchCard({
-  snap,
+  snap: initial,
   onOpen,
 }: {
   snap: LiveSnapshotRead;
   onOpen: (matchId: string) => void;
 }) {
+  const { snap: live } = useLiveSnapshot(initial);
+  const snap = live ?? initial;
   const p = snap.payload;
   const { home, away } = p.teams;
 
