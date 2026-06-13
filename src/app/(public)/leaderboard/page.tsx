@@ -11,8 +11,7 @@ import {
   listTeams,
 } from "@/server/queries/public";
 
-// Rebuilt on match completion — 30s cache keeps navigation instant.
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 export const metadata = { title: "Leaderboard — Cricket Fiesta '26" };
 

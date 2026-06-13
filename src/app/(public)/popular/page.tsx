@@ -2,7 +2,7 @@ import { PopularPlayers } from "@/components/public/popular-players";
 import type { PopularRow } from "@/lib/leaderboard-types";
 import { getPopularPlayers } from "@/server/queries/public";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export const metadata = { title: "Popular players — Cricket Fiesta '26" };
 

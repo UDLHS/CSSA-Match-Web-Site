@@ -2,7 +2,7 @@ import { MatchesList } from "@/components/public/matches-list";
 import type { LiveSnapshotRead } from "@/lib/live-types";
 import { listMatchCards } from "@/server/queries/public";
 
-export const revalidate = 15;
+export const dynamic = "force-dynamic";
 
 export const metadata = { title: "Matches — Cricket Fiesta '26" };
 

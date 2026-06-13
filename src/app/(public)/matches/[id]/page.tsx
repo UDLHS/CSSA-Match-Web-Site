@@ -3,8 +3,7 @@ import { notFound } from "next/navigation";
 import { MatchDetailView } from "@/components/public/match-detail-view";
 import { getMatchDetailDTO } from "@/server/queries/match-detail";
 
-// Initial render cached; MatchDetailView polls for live updates client-side.
-export const revalidate = 15;
+export const dynamic = "force-dynamic";
 
 export default async function MatchDetailPage({
   params,

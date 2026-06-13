@@ -19,8 +19,7 @@ import {
 } from "@/server/queries/public";
 
 /** Live data on every request — the hero then short-polls client-side. */
-// Shell cached briefly; the live hero self-updates via SSE on the client.
-export const revalidate = 15;
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const season = await getActiveSeason();

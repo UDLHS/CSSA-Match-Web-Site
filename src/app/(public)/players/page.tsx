@@ -2,8 +2,7 @@ import { SquadsView, type TeamSquad } from "@/components/public/squads-view";
 import { BATTING_STYLE_LABELS, BOWLING_STYLE_LABELS, ROLE_LABELS } from "@/lib/player-types";
 import { getActiveSeason, listSquads } from "@/server/queries/public";
 
-// Squads change rarely — serve from cache, refresh in the background.
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export const metadata = { title: "Squads — Cricket Fiesta '26" };
 
