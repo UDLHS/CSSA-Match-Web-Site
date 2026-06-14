@@ -18,13 +18,14 @@ import {
   getPopularPlayers,
   listMatchCards,
 } from "@/server/queries/public";
+import { getActiveAd } from "@/server/queries/ads";
 
 /** Live data on every request — the hero then short-polls client-side. */
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const season = await getActiveSeason();
-  const [featured, previous, live, upcoming, batting, bowling, overall, popular] =
+  const [featured, previous, live, upcoming, batting, bowling, overall, popular, bannerAd, skyscraperAd] =
     await Promise.all([
       getFeaturedMatchSnapshot(),
       listMatchCards("previous"),
@@ -34,6 +35,8 @@ export default async function HomePage() {
       season ? getLeaderboard(season.id, "BOWLING") : null,
       season ? getLeaderboard(season.id, "OVERALL") : null,
       getPopularPlayers(7),
+      getActiveAd("HOME_LEADERBOARD_BANNER"),
+      getActiveAd("HOME_SKYSCRAPER"),
     ]);
 
   const popularRows: PopularRow[] = popular.map((v, i) => ({
@@ -60,15 +63,17 @@ export default async function HomePage() {
     >
       <HomeTicker />
       <LiveHero initial={featured as LiveSnapshotRead | null} />
-      <AdSlot placement="HOME_LEADERBOARD_BANNER" variant="leaderboard" />
+      {/* Only rendered when a creative is live — no empty placeholder. */}
+      {bannerAd && <AdSlot placement="HOME_LEADERBOARD_BANNER" variant="leaderboard" ad={bannerAd} />}
       <MatchesCarousel
         previous={previous as LiveSnapshotRead[]}
         live={live as LiveSnapshotRead[]}
         upcoming={upcoming as LiveSnapshotRead[]}
       />
-      {/* Desktop: leaderboard 5 / skyscraper / popular 7 split; mobile stacks */}
+      {/* Desktop: leaderboard / popular split, with a skyscraper column ONLY
+          when there's a live ad (otherwise no reserved gap). Mobile stacks. */}
       <div
-        className="grid max-lg:grid-cols-1 lg:grid-cols-[5fr_176px_7fr]"
+        className={`grid max-lg:grid-cols-1 ${skyscraperAd ? "lg:grid-cols-[5fr_176px_7fr]" : "lg:grid-cols-[5fr_7fr]"}`}
         style={{ gap: 20, alignItems: "stretch" }}
       >
         <div style={{ alignSelf: "start" }}>
@@ -78,12 +83,16 @@ export default async function HomePage() {
             overall={(overall?.payload as LbOverallRow[]) ?? []}
           />
         </div>
-        <div className="max-lg:hidden">
-          <AdSlot placement="HOME_SKYSCRAPER" variant="skyscraper" />
-        </div>
-        <div className="lg:hidden">
-          <AdSlot placement="HOME_LEADERBOARD_BANNER" variant="banner" />
-        </div>
+        {skyscraperAd && (
+          <div className="max-lg:hidden">
+            <AdSlot placement="HOME_SKYSCRAPER" variant="skyscraper" ad={skyscraperAd} />
+          </div>
+        )}
+        {bannerAd && (
+          <div className="lg:hidden">
+            <AdSlot placement="HOME_LEADERBOARD_BANNER" variant="banner" ad={bannerAd} />
+          </div>
+        )}
         <div style={{ alignSelf: "start" }}>
           <PopularPlayers rows={popularRows} />
         </div>

@@ -1,24 +1,29 @@
 import type { AdPlacement } from "@prisma/client";
-import { getActiveAd } from "@/server/queries/ads";
-import { SponsorSlot } from "./atoms";
+import { getActiveAd, type ActiveAd } from "@/server/queries/ads";
 import { AdImpression } from "./ad-impression";
 
 type SlotVariant = "leaderboard" | "skyscraper" | "banner";
 
 /**
- * Server component: serves the active creative for a placement, or falls back
- * to the "your brand here" placeholder. Impressions are counted client-side
- * via a beacon so the public render path stays a pure read.
+ * Server component: renders the active creative for a placement, or NOTHING
+ * when there is no ad (no "your brand here" placeholder — empty ad space stays
+ * invisible to visitors). Pass a pre-fetched `ad` so the parent can also decide
+ * layout (e.g. collapse a reserved column) without a second query.
+ *
+ * Ads appear/disappear live on the home page because the HomeTicker re-renders
+ * this server component every few seconds.
  */
 export async function AdSlot({
   placement,
   variant,
+  ad: provided,
 }: {
   placement: AdPlacement;
   variant: SlotVariant;
+  ad?: ActiveAd | null;
 }) {
-  const ad = await getActiveAd(placement);
-  if (!ad) return <SponsorSlot variant={variant} />;
+  const ad = provided !== undefined ? provided : await getActiveAd(placement);
+  if (!ad) return null;
 
   const height = variant === "leaderboard" ? 104 : variant === "banner" ? 90 : undefined;
 

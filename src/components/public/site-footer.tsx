@@ -1,14 +1,14 @@
 /* eslint-disable @next/next/no-img-element */
+import { getFooterPartners } from "@/server/queries/ads";
 
-const PARTNERS = [
-  "Title Sponsor",
-  "Co-Sponsor",
-  "Beverage Partner",
-  "Media Partner",
-  "Campus Store",
-];
+/**
+ * Footer. The "Our partners" strip lists ACTIVE sponsors from the database and
+ * is hidden entirely when there are none — no placeholder chips. New sponsors
+ * appear live (the home/matches HomeTicker re-renders the layout).
+ */
+export async function SiteFooter() {
+  const partners = await getFooterPartners();
 
-export function SiteFooter() {
   return (
     <footer
       style={{
@@ -20,32 +20,46 @@ export function SiteFooter() {
         gap: 18,
       }}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <span className="t-label" style={{ color: "var(--on-ink-muted)" }}>Our partners</span>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          {PARTNERS.map((p) => (
-            <span
-              key={p}
-              style={{
-                height: 38,
-                padding: "0 16px",
-                borderRadius: 8,
-                background: "rgba(255,255,255,.07)",
-                border: "1px solid rgba(255,255,255,.12)",
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                fontSize: 12,
-                fontWeight: 600,
-                color: "var(--on-ink)",
-              }}
-            >
-              <span style={{ width: 18, height: 18, borderRadius: 5, background: "rgba(255,255,255,.18)" }} />
-              {p}
-            </span>
-          ))}
+      {partners.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <span className="t-label" style={{ color: "var(--on-ink-muted)" }}>Our partners</span>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {partners.map((p) => {
+              const chip = (
+                <span
+                  style={{
+                    height: 38,
+                    padding: "0 16px",
+                    borderRadius: 8,
+                    background: "rgba(255,255,255,.07)",
+                    border: "1px solid rgba(255,255,255,.12)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "var(--on-ink)",
+                  }}
+                >
+                  {p.logoUrl ? (
+                    <img src={p.logoUrl} alt="" style={{ width: 20, height: 20, borderRadius: 4, objectFit: "cover" }} />
+                  ) : (
+                    <span style={{ width: 18, height: 18, borderRadius: 5, background: "rgba(255,255,255,.18)" }} />
+                  )}
+                  {p.name}
+                </span>
+              );
+              return p.websiteUrl ? (
+                <a key={p.id} href={p.websiteUrl} target="_blank" rel="noopener noreferrer sponsored" style={{ textDecoration: "none" }}>
+                  {chip}
+                </a>
+              ) : (
+                <span key={p.id}>{chip}</span>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
       <div className="divider" style={{ background: "rgba(255,255,255,.12)" }} />
       <div
         className="row"

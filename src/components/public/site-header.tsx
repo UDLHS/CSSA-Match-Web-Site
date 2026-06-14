@@ -96,9 +96,6 @@ export function SiteHeader() {
         ))}
         <span className="row" style={{ gap: 14, marginLeft: 8 }}>
           <ThemeToggle />
-          <Link href="/admin" className="btn btn-ghost btn-sm" style={{ textDecoration: "none" }}>
-            <Icon d={IC.shield} size={14} /> Admin
-          </Link>
         </span>
       </nav>
 
@@ -169,13 +166,6 @@ export function SiteHeader() {
                 {l.label}
               </Link>
             ))}
-            <Link
-              href="/admin"
-              className="btn btn-ghost btn-sm"
-              style={{ textDecoration: "none", marginTop: "auto", justifyContent: "center" }}
-            >
-              <Icon d={IC.shield} size={14} /> Admin
-            </Link>
           </nav>
         </div>
       )}
