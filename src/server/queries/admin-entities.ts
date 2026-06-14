@@ -102,6 +102,16 @@ export async function activeSeasonId(): Promise<string | null> {
   return s?.id ?? null;
 }
 
+/** Next free match number for a season (highest used + 1; counts deleted). */
+export async function nextMatchNumber(seasonId: string): Promise<number> {
+  const last = await prisma.match.findFirst({
+    where: { seasonId },
+    orderBy: { matchNumber: "desc" },
+    select: { matchNumber: true },
+  });
+  return (last?.matchNumber ?? 0) + 1;
+}
+
 export async function listSponsorsAndAds() {
   const [sponsors, ads] = await Promise.all([
     prisma.sponsor.findMany({ orderBy: { tier: "asc" } }),

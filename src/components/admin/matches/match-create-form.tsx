@@ -17,17 +17,19 @@ export function MatchCreateForm({
   seasonId,
   teams,
   venues,
+  defaultMatchNumber,
 }: {
   seasonId: string;
   teams: { id: string; name: string }[];
   venues: { id: string; name: string; location: string }[];
+  defaultMatchNumber: number;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
-    matchNumber: "",
+    matchNumber: String(defaultMatchNumber),
     stage: "Group stage",
     homeTeamId: teams[0]?.id ?? "",
     awayTeamId: teams[1]?.id ?? "",
@@ -86,7 +88,7 @@ export function MatchCreateForm({
 
       <Panel title="Fixture">
         <div className="grid max-md:grid-cols-1 md:grid-cols-3" style={{ gap: 14 }}>
-          <Field label="Match number" req>
+          <Field label="Match number" req hint="Auto-filled with the next free number — must be unique this season">
             <span className="input"><input type="number" min={1} required value={form.matchNumber} onChange={(e) => set("matchNumber", e.target.value)} placeholder="15" /></span>
           </Field>
           <Field label="Stage / round">

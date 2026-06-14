@@ -32,6 +32,19 @@ export async function createMatch(
       throw new ActionError("VALIDATION", "Both teams must exist and be active");
     }
 
+    // Match number is unique per season (incl. deleted matches that still hold
+    // the slot). Give a clear message instead of a cryptic "concurrent write".
+    const clash = await prisma.match.findFirst({
+      where: { seasonId: input.seasonId, matchNumber: input.matchNumber },
+      select: { id: true },
+    });
+    if (clash) {
+      throw new ActionError(
+        "VALIDATION",
+        `Match number ${input.matchNumber} is already used in this season — pick a different number.`,
+      );
+    }
+
     const { homeTeamId, awayTeamId, ...matchData } = input;
     const match = await prisma.$transaction(async (tx) => {
       const created = await tx.match.create({
