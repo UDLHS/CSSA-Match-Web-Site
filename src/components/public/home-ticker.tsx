@@ -10,14 +10,18 @@ import { useRouter } from "next/navigation";
  *
  * This only governs how fast *structural* changes appear:
  *  - new matches created in admin show up under Upcoming on their own,
- *  - a match starting moves Upcoming → Live without a manual reload,
+ *  - a match starting/ending an innings moves it between tabs without a reload,
  *  - leaderboard/standings numbers refresh as completions land.
  *
  * Live SCORES are pushed by the per-card / hero live subscription and are
- * unaffected by this interval — so we keep it relaxed. With the public reads
- * cached (`unstable_cache`), each refresh is a Data Cache hit, not a DB query,
- * so N viewers refreshing costs ~one DB read per cache window regardless of
- * how many people are watching.
+ * unaffected by this interval. With the public reads cached (`unstable_cache`)
+ * and every lifecycle action busting that cache immediately on commit, each
+ * tick is a Data Cache hit, not a DB query — so N viewers ticking costs ~one
+ * DB read per cache window regardless of how many people are watching.
+ *
+ * Home and Matches pass intervalMs=4000 (status changes there should feel
+ * near-instant, under 5s); Leaderboard/Players keep the relaxed default since
+ * nothing there needs sub-5s freshness.
  */
 export function PageTicker({ intervalMs = 12000 }: { intervalMs?: number }) {
   const router = useRouter();

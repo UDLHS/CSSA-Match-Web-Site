@@ -60,6 +60,8 @@ export async function publishMatch(
       });
       return v;
     });
+    // Now shows under "Upcoming" on the public site — don't wait on the cache.
+    revalidatePublic(PUBLIC_HOME, PUBLIC_MATCHES);
     return { snapshotVersion: version };
   });
 }
@@ -111,6 +113,8 @@ export async function startMatch(
       });
       return v;
     });
+    // Now shows under "Live" on the public site — don't wait on the cache.
+    revalidatePublic(PUBLIC_HOME, PUBLIC_MATCHES);
     return { snapshotVersion: version };
   });
 }
@@ -214,6 +218,8 @@ export async function startInnings(
       });
       return { inningsId: innings.id, snapshotVersion: v };
     });
+    // INNINGS_BREAK -> LIVE moves the match back to the "Live" tab.
+    revalidatePublic(PUBLIC_HOME, PUBLIC_MATCHES);
     return result;
   });
 }
@@ -258,6 +264,8 @@ export async function endInnings(
       });
       return v;
     });
+    // Innings 1 ending moves the match to "Innings break" on the public site.
+    revalidatePublic(PUBLIC_HOME, PUBLIC_MATCHES);
     return { snapshotVersion: version };
   });
 }

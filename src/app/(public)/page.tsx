@@ -64,7 +64,7 @@ export default async function HomePage() {
         width: "100%",
       }}
     >
-      <PageTicker />
+      <PageTicker intervalMs={4000} />
       <LiveHero initial={featured as LiveSnapshotRead | null} />
       {/* Only rendered when a creative is live — no empty placeholder. */}
       {bannerAd && <AdSlot placement="HOME_LEADERBOARD_BANNER" variant="leaderboard" ad={bannerAd} />}

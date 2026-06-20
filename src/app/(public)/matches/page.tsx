@@ -26,7 +26,7 @@ export default async function MatchesPage() {
         width: "100%",
       }}
     >
-      <PageTicker />
+      <PageTicker intervalMs={4000} />
       <h1 className="t-display">Matches</h1>
       <MatchesList
         live={live as LiveSnapshotRead[]}
