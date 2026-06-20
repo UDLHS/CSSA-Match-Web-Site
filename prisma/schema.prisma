@@ -715,26 +715,36 @@ model LeaderboardSnapshot {
   @@map("leaderboard_snapshots")
 }
 
-/// Admin-managed group standings / points table.
+/// Group standings / points table.
 ///
-/// Deliberately decoupled from the scoring engine so it never touches the live
-/// read path: P / W / L / NR are DERIVED at read time from completed matches
-/// (Match.status + winnerTeamId), while `points`, `netRunRate` and the
-/// qualification badge are entered by an admin. One row per team per group.
-/// Display order is points desc, then netRunRate desc.
+/// Points and NRR are AUTO-COMPUTED by the leaderboard engine
+/// (server/scoring/leaderboard.ts buildTeamStandings) every time a match
+/// completes or the admin rebuilds — written here into `autoPoints` /
+/// `autoNetRunRate` so this never touches the live scoring read path (it's
+/// the same off-hot-path trigger as the rest of the leaderboard rebuild).
+/// P / W / L / NR are derived at read time from completed/abandoned matches.
+///
+/// An admin can pin `pointsOverride` / `nrrOverride` to correct a result
+/// (e.g. a penalty deduction) — when set, the override wins; the auto value
+/// keeps recomputing underneath so clearing the override snaps back to it.
+/// groupName / status (Q/E badge) are committee calls with no auto source,
+/// so they stay admin-only. One row per team per season.
+/// Display order is effective points desc, then effective netRunRate desc.
 model TeamStanding {
-  id         String         @id @default(cuid())
-  seasonId   String
-  season     Season         @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  teamId     String
-  team       Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  groupName  String         @default("") // "Super 8 Group 1"; "" = single table
-  points     Int            @default(0)
-  netRunRate Float          @default(0)
-  status     StandingStatus @default(NONE)
-  sortHint   Int            @default(0) // optional manual nudge for ties
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
+  id             String         @id @default(cuid())
+  seasonId       String
+  season         Season         @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  teamId         String
+  team           Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  groupName      String         @default("") // "Super 8 Group 1"; "" = single table
+  autoPoints     Int            @default(0) // last value computed from completed matches
+  autoNetRunRate Float? // null until the team has faced/bowled any overs
+  pointsOverride Int? // admin pin; null = use autoPoints
+  nrrOverride    Float? // admin pin; null = use autoNetRunRate
+  status         StandingStatus @default(NONE)
+  sortHint       Int            @default(0) // optional manual nudge for ties
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
   @@unique([seasonId, teamId])
   @@index([seasonId])

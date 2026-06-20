@@ -1,17 +1,19 @@
 import type { StandingGroup, StandingRow } from "@/server/queries/standings";
+import { fmtNrr } from "@/lib/format";
 import { TeamLogo } from "./atoms";
 
 /**
  * Public points table (boards/leaderboard standings). One block per group,
- * columns P / W / L / NR / Pts / NRR with a Q/E qualification tag. Rows arrive
- * already sorted (points desc, then NRR). Horizontally scrollable on narrow
- * screens so the numbers never squash.
+ * columns P / W / L / NR / Pts / NRR with a Q/E qualification tag. Points/NRR
+ * are computed automatically as matches complete — rows arrive already
+ * sorted (points desc, then NRR). Horizontally scrollable on narrow screens
+ * so the numbers never squash.
  */
 export function StandingsTable({ groups }: { groups: StandingGroup[] }) {
   if (groups.length === 0) {
     return (
       <div className="card" style={{ padding: 24, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
-        The points table appears once the committee sets it up.
+        The points table appears once teams are added.
       </div>
     );
   }
@@ -43,7 +45,7 @@ function GroupTable({ group }: { group: StandingGroup }) {
           </thead>
           <tbody>
             {group.rows.map((r, i) => (
-              <StandingTr key={r.id} row={r} rank={i + 1} />
+              <StandingTr key={r.teamId} row={r} rank={i + 1} />
             ))}
           </tbody>
         </table>
@@ -61,7 +63,6 @@ function QeTag({ status }: { status: StandingRow["status"] }) {
 }
 
 function StandingTr({ row, rank }: { row: StandingRow; rank: number }) {
-  const nrr = `${row.netRunRate > 0 ? "+" : ""}${row.netRunRate.toFixed(3)}`;
   return (
     <tr className={row.status === "QUALIFIED" ? "hl" : ""}>
       <td className="t-num" style={{ fontWeight: 800, color: "var(--muted)" }}>{rank}</td>
@@ -77,7 +78,7 @@ function StandingTr({ row, rank }: { row: StandingRow; rank: number }) {
       <td className="num">{row.lost}</td>
       <td className="num">{row.noResult}</td>
       <td className="num" style={{ fontWeight: 800 }}>{row.points}</td>
-      <td className="num t-num" style={{ color: row.netRunRate < 0 ? "var(--muted)" : "inherit" }}>{nrr}</td>
+      <td className="num t-num" style={{ color: row.netRunRate != null && row.netRunRate < 0 ? "var(--muted)" : "inherit" }}>{fmtNrr(row.netRunRate)}</td>
     </tr>
   );
 }

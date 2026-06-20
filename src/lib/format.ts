@@ -32,3 +32,9 @@ export function shortName(fullName: string): string {
 export function strikeRateOf(runs: number, balls: number): string {
   return balls > 0 ? ((runs / balls) * 100).toFixed(1) : "—";
 }
+
+/** Net run rate, signed to 3dp ("+2.259" / "-3.415"); "—" when not yet computable. */
+export function fmtNrr(n: number | null | undefined): string {
+  if (n == null) return "—";
+  return `${n > 0 ? "+" : ""}${n.toFixed(3)}`;
+}

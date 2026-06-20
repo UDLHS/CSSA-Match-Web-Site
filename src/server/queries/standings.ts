@@ -2,17 +2,22 @@ import type { StandingStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 
 /**
- * Team points table. The manual half (points / NRR / group / qualification)
- * lives in the `TeamStanding` row; the P/W/L/NR half is DERIVED here from
- * completed + abandoned matches, so it stays correct as results land without
- * any write-path coupling to the scoring engine.
+ * Team points table. Starts from every active team (not just configured
+ * ones) so it never needs manual setup. Points/NRR are auto-computed by the
+ * leaderboard engine on match completion (server/scoring/leaderboard.ts) and
+ * read here from `TeamStanding.auto*`; an admin's `pointsOverride` /
+ * `nrrOverride` — if set — wins over the auto value. P/W/L/NR are DERIVED
+ * here from completed + abandoned matches, so they stay correct as results
+ * land without any write-path coupling to the scoring engine. groupName /
+ * status (Q/E badge) have no auto source and stay admin-only.
  *
  * Display order inside a group: points desc, then NRR desc, then an optional
  * manual `sortHint`, then team name.
  */
 
 export interface StandingRow {
-  id: string; // TeamStanding id (admin edit/delete handle)
+  /** TeamStanding row id — null when the team has no row yet (pure defaults). */
+  id: string | null;
   teamId: string;
   team: {
     id: string;
@@ -26,8 +31,12 @@ export interface StandingRow {
   won: number; // derived
   lost: number; // derived
   noResult: number; // derived
-  points: number; // manual
-  netRunRate: number; // manual
+  points: number; // pointsOverride ?? autoPoints, defaults to 0
+  netRunRate: number | null; // nrrOverride ?? autoNetRunRate, null = no overs yet
+  pointsIsOverridden: boolean;
+  nrrIsOverridden: boolean;
+  autoPoints: number;
+  autoNetRunRate: number | null;
   status: StandingStatus;
   sortHint: number;
 }
@@ -49,11 +58,9 @@ const TEAM_SELECT = {
 
 /** Build the grouped, sorted points table for a season. */
 export async function buildStandings(seasonId: string): Promise<StandingGroup[]> {
-  const [standings, matches] = await Promise.all([
-    prisma.teamStanding.findMany({
-      where: { seasonId, team: { deletedAt: null } },
-      include: { team: { select: TEAM_SELECT } },
-    }),
+  const [teams, standings, matches] = await Promise.all([
+    prisma.team.findMany({ where: { deletedAt: null }, select: TEAM_SELECT }),
+    prisma.teamStanding.findMany({ where: { seasonId } }),
     prisma.match.findMany({
       where: {
         seasonId,
@@ -85,21 +92,32 @@ export async function buildStandings(seasonId: string): Promise<StandingGroup[]>
     }
   }
 
-  const rows: StandingRow[] = standings.map((s) => {
-    const d = tally.get(s.teamId) ?? { played: 0, won: 0, lost: 0, noResult: 0 };
+  const standingByTeam = new Map(standings.map((s) => [s.teamId, s]));
+
+  const rows: StandingRow[] = teams.map((team) => {
+    const d = tally.get(team.id) ?? { played: 0, won: 0, lost: 0, noResult: 0 };
+    const s = standingByTeam.get(team.id);
+    const autoPoints = s?.autoPoints ?? 0;
+    const autoNetRunRate = s?.autoNetRunRate ?? null;
+    const pointsIsOverridden = s?.pointsOverride != null;
+    const nrrIsOverridden = s?.nrrOverride != null;
     return {
-      id: s.id,
-      teamId: s.teamId,
-      team: s.team,
-      groupName: s.groupName,
+      id: s?.id ?? null,
+      teamId: team.id,
+      team,
+      groupName: s?.groupName ?? "",
       played: d.played,
       won: d.won,
       lost: d.lost,
       noResult: d.noResult,
-      points: s.points,
-      netRunRate: s.netRunRate,
-      status: s.status,
-      sortHint: s.sortHint,
+      points: s?.pointsOverride ?? autoPoints,
+      netRunRate: s?.nrrOverride ?? autoNetRunRate,
+      pointsIsOverridden,
+      nrrIsOverridden,
+      autoPoints,
+      autoNetRunRate,
+      status: s?.status ?? "NONE",
+      sortHint: s?.sortHint ?? 0,
     };
   });
 
@@ -118,7 +136,7 @@ export async function buildStandings(seasonId: string): Promise<StandingGroup[]>
       rows: rs.sort(
         (a, b) =>
           b.points - a.points ||
-          b.netRunRate - a.netRunRate ||
+          (b.netRunRate ?? 0) - (a.netRunRate ?? 0) ||
           b.sortHint - a.sortHint ||
           a.team.name.localeCompare(b.team.name),
       ),
@@ -127,7 +145,7 @@ export async function buildStandings(seasonId: string): Promise<StandingGroup[]>
   return ordered;
 }
 
-/** Flat list for the admin editor (one row per stored standing). */
+/** Flat list for the admin editor (one row per active team). */
 export async function listAdminStandings(seasonId: string): Promise<StandingRow[]> {
   const groups = await buildStandings(seasonId);
   return groups.flatMap((g) => g.rows);

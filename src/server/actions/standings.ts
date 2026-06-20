@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { standingUpsertSchema, standingDeleteSchema } from "@/lib/validation";
+import { standingUpsertSchema } from "@/lib/validation";
 import { requireRole, MASTER_DATA_ROLES } from "@/server/auth";
 import { writeAudit } from "@/server/audit";
 import { ActionError } from "@/server/errors";
@@ -19,7 +19,13 @@ function bustStandings() {
   revalidatePublic(PUBLIC_HOME, PUBLIC_LEADERBOARD);
 }
 
-/** Create or update the manual half of a team's points-table row. */
+/**
+ * Set the manual half of a team's points-table row: group, qualification
+ * badge, and optional points/NRR overrides. Points and NRR themselves are
+ * computed automatically by the leaderboard engine on every match
+ * completion (server/scoring/leaderboard.ts) — passing null/omitting an
+ * override here just means "use the automatic value."
+ */
 export async function upsertStanding(
   raw: unknown,
 ): Promise<ActionResult<{ id: string }>> {
@@ -39,8 +45,8 @@ export async function upsertStanding(
 
     const data = {
       groupName: input.groupName ?? "",
-      points: input.points,
-      netRunRate: input.netRunRate,
+      pointsOverride: input.pointsOverride ?? null,
+      nrrOverride: input.nrrOverride ?? null,
       status: input.status,
       sortHint: input.sortHint,
     };
@@ -63,31 +69,5 @@ export async function upsertStanding(
 
     bustStandings();
     return { id: row.id };
-  });
-}
-
-export async function deleteStanding(
-  raw: unknown,
-): Promise<ActionResult<{ id: string }>> {
-  return runAction(async () => {
-    const { id } = standingDeleteSchema.parse(raw);
-    const actor = await requireRole(MASTER_DATA_ROLES);
-
-    const before = await prisma.teamStanding.findUnique({ where: { id } });
-    if (!before) throw new ActionError("NOT_FOUND", "Standing not found");
-
-    await prisma.$transaction(async (tx) => {
-      await tx.teamStanding.delete({ where: { id } });
-      await writeAudit(tx, {
-        userId: actor.userId,
-        action: "standing.delete",
-        entityType: "TeamStanding",
-        entityId: id,
-        before,
-      });
-    });
-
-    bustStandings();
-    return { id };
   });
 }

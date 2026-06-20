@@ -365,6 +365,7 @@ async function buildLeaderboardSnapshots(
     }));
 
   const standings = await buildTeamStandings(db, seasonId);
+  await syncTeamStandings(db, seasonId, standings);
 
   const votes = await db.popularVote.findMany({
     include: {
@@ -513,4 +514,25 @@ async function buildTeamStandings(db: Db, seasonId: string) {
     }))
     .sort((a, b) => b.points - a.points || (b.nrr ?? 0) - (a.nrr ?? 0))
     .map((t, i) => ({ rank: i + 1, ...t }));
+}
+
+/**
+ * Persist the freshly computed points/NRR into TeamStanding.auto* so the
+ * admin-editable points table (server/queries/standings.ts) stays correct
+ * without anyone typing numbers in. Only the auto* columns are touched —
+ * groupName/status/sortHint and any admin pointsOverride/nrrOverride are
+ * left exactly as they are.
+ */
+async function syncTeamStandings(
+  db: Db,
+  seasonId: string,
+  standings: Awaited<ReturnType<typeof buildTeamStandings>>,
+): Promise<void> {
+  for (const s of standings) {
+    await db.teamStanding.upsert({
+      where: { seasonId_teamId: { seasonId, teamId: s.teamId } },
+      create: { seasonId, teamId: s.teamId, autoPoints: s.points, autoNetRunRate: s.nrr },
+      update: { autoPoints: s.points, autoNetRunRate: s.nrr },
+    });
+  }
 }

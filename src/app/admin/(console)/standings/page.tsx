@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { activeSeasonId, listAdminTeams } from "@/server/queries/admin-entities";
+import { activeSeasonId } from "@/server/queries/admin-entities";
 import { listAdminStandings } from "@/server/queries/standings";
 import { StandingsScreen } from "@/components/admin/standings/standings-screen";
 
@@ -11,20 +11,15 @@ export default async function AdminStandingsPage() {
   const seasonId = await activeSeasonId();
   if (!seasonId) notFound();
 
-  const [rows, teams] = await Promise.all([
-    listAdminStandings(seasonId),
-    listAdminTeams(),
-  ]);
+  const rows = await listAdminStandings(seasonId);
 
   return (
     <StandingsScreen
       seasonId={seasonId}
       rows={rows.map((r) => ({
-        id: r.id,
         teamId: r.teamId,
         teamName: r.team.name,
         shortName: r.team.shortName,
-        logoUrl: r.team.logoUrl,
         primaryColor: r.team.primaryColor,
         groupName: r.groupName,
         played: r.played,
@@ -33,9 +28,12 @@ export default async function AdminStandingsPage() {
         noResult: r.noResult,
         points: r.points,
         netRunRate: r.netRunRate,
+        pointsIsOverridden: r.pointsIsOverridden,
+        nrrIsOverridden: r.nrrIsOverridden,
+        autoPoints: r.autoPoints,
+        autoNetRunRate: r.autoNetRunRate,
         status: r.status,
       }))}
-      teams={teams.map((t) => ({ id: t.id, name: t.name }))}
     />
   );
 }

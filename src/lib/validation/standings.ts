@@ -4,21 +4,21 @@ import { idSchema, text } from "./common";
 export const standingStatusSchema = z.enum(["NONE", "QUALIFIED", "ELIMINATED"]);
 
 /**
- * Admin-entered points-table fields. P/W/L/NR are NOT here — they are derived
- * from completed matches at read time. Admin owns points, NRR, group and the
- * qualification badge.
+ * Admin-entered points-table fields. P/W/L/NR — and points/NRR themselves —
+ * are auto-computed from completed matches; this schema only covers what has
+ * no automatic source (group, qualification badge) plus the optional
+ * pointsOverride/nrrOverride pins. Omit/null an override to fall back to the
+ * auto-computed value.
  */
 export const standingUpsertSchema = z.object({
   seasonId: idSchema,
   teamId: idSchema,
   groupName: text(1, 40).nullish(),
-  points: z.number().int().min(0).max(9999),
-  netRunRate: z.number().min(-99).max(99),
+  pointsOverride: z.number().int().min(0).max(9999).nullish(),
+  nrrOverride: z.number().min(-99).max(99).nullish(),
   status: standingStatusSchema.default("NONE"),
   sortHint: z.number().int().min(0).max(9999).default(0),
 });
-
-export const standingDeleteSchema = z.object({ id: idSchema });
 
 export type StandingUpsertInput = z.infer<typeof standingUpsertSchema>;
 
