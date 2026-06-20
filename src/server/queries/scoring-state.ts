@@ -233,7 +233,7 @@ function buildInningsDTO(
 
 function labelForRow(r: DeliveryRow): string {
   if (r.wicket && r.wicket.type !== "RETIRED_HURT") return "W";
-  if (r.extraType === "WIDE") return "WD";
+  if (r.extraType === "WIDE") return r.extraRuns > 1 ? `WD${r.extraRuns}` : "WD";
   if (r.extraType === "NO_BALL") return "NB";
   if (r.extraType === "BYE" || r.extraType === "LEG_BYE") return String(r.extraRuns);
   return String(r.runsOffBat);

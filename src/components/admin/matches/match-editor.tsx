@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { setToss, setPlayingXI, updateMatch } from "@/server/actions/matches";
+import { setToss, setPlayingXI, updateMatch, softDeleteMatch } from "@/server/actions/matches";
 import { publishMatch, abandonMatch } from "@/server/actions/match-lifecycle";
 import { PageHead, Panel, Field, StatusPill } from "@/components/admin/kit";
 import { RoleAvatar } from "@/components/public/atoms";
@@ -55,6 +55,8 @@ export function MatchEditor({
   const [notice, setNotice] = useState<string | null>(null);
 
   const editable = match.status === "DRAFT" || match.status === "UPCOMING";
+  const canAbandon = match.status !== "COMPLETED" && match.status !== "ABANDONED";
+  const canDelete = match.status !== "LIVE" && match.status !== "INNINGS_BREAK";
 
   const act = async (fn: () => Promise<{ ok: boolean; error?: { message: string } }>, ok?: string) => {
     setBusy(true);
@@ -67,6 +69,18 @@ export function MatchEditor({
       if (ok) setNotice(ok);
       router.refresh();
     }
+  };
+
+  const onDelete = async () => {
+    if (!confirm(`Delete match ${match.matchNumber} (${home?.shortName ?? "?"} vs ${away?.shortName ?? "?"})? This removes only this match — both teams and their other matches are unaffected.`)) {
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    const res = await softDeleteMatch(match.id);
+    setBusy(false);
+    if (!res.ok) { setError(res.error.message); return; }
+    router.push("/admin/matches");
   };
 
   return (
@@ -113,8 +127,9 @@ export function MatchEditor({
         {away && <XIPanel team={away} squad={awaySquad} required={match.playersPerSide} existing={existingXI.filter((x) => x.teamId === away.id)} matchId={match.id} editable={editable} busy={busy} onSave={act} />}
       </div>
 
-      {editable && (
+      {canDelete && (
         <Panel title="Danger zone" pad={16} style={{ borderColor: "color-mix(in oklab, var(--danger) 35%, var(--border))" }}>
+          {editable && (
           <div className="row" style={{ justifyContent: "space-between", gap: 12 }}>
             <span style={{ display: "flex", flexDirection: "column" }}>
               <span style={{ fontSize: 13, fontWeight: 700, color: "var(--danger)" }}>Abandon match</span>
@@ -122,6 +137,16 @@ export function MatchEditor({
             </span>
             <button type="button" className="btn btn-danger btn-sm" disabled={busy} onClick={() => { if (confirm("Abandon this match?")) act(() => abandonMatch({ matchId: match.id, reason: "Abandoned by admin" }), "Match abandoned"); }}>
               <Icon d={IC.trash} size={14} /> Abandon…
+            </button>
+          </div>
+          )}
+          <div className="row" style={{ justifyContent: "space-between", gap: 12, marginTop: editable ? 14 : 0, paddingTop: editable ? 14 : 0, borderTop: editable ? "1px solid var(--border)" : "none" }}>
+            <span style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--danger)" }}>Delete match</span>
+              <span className="t-small" style={{ color: "var(--muted)" }}>Removes only this fixture — both teams and their other matches are unaffected.</span>
+            </span>
+            <button type="button" className="btn btn-danger btn-sm" disabled={busy} onClick={onDelete}>
+              <Icon d={IC.trash} size={14} /> Delete…
             </button>
           </div>
         </Panel>

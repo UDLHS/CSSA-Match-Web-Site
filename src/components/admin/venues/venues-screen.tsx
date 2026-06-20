@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createVenue, updateVenue } from "@/server/actions/venues";
+import { createVenue, updateVenue, deleteVenue } from "@/server/actions/venues";
 import { PageHead, Panel, Field, TableWrap, EmptyState } from "@/components/admin/kit";
 import { Icon, IC } from "@/components/public/icons";
 
@@ -29,6 +29,17 @@ export function VenuesScreen({ venues }: { venues: VenueRow[] }) {
 
   const edit = (v: VenueRow) =>
     setForm({ id: v.id, name: v.name, location: v.location, capacity: v.capacity?.toString() ?? "", pitchType: v.pitchType ?? "", notes: v.notes ?? "", isAvailable: v.isAvailable });
+
+  const remove = async (v: VenueRow) => {
+    if (!confirm(`Delete ${v.name}? Matches or teams that reference it just lose the venue assignment — they aren't deleted.`)) return;
+    setBusy(true);
+    setError(null);
+    const res = await deleteVenue(v.id);
+    setBusy(false);
+    if (!res.ok) { setError(res.error.message); return; }
+    if (form.id === v.id) setForm(BLANK);
+    router.refresh();
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +68,7 @@ export function VenuesScreen({ venues }: { venues: VenueRow[] }) {
           <EmptyState icon={IC.pin} title="No venues yet" sub="Add your first ground on the right." />
         ) : (
           <TableWrap>
-            <thead><tr><th>Venue</th><th>Location</th><th className="num">Cap.</th><th>Pitch</th><th className="num">Matches</th><th className="num">Edit</th></tr></thead>
+            <thead><tr><th>Venue</th><th>Location</th><th className="num">Cap.</th><th>Pitch</th><th className="num">Matches</th><th className="num">Actions</th></tr></thead>
             <tbody>
               {venues.map((v) => (
                 <tr key={v.id}>
@@ -66,7 +77,12 @@ export function VenuesScreen({ venues }: { venues: VenueRow[] }) {
                   <td className="num t-num">{v.capacity ?? "—"}</td>
                   <td style={{ fontSize: 12 }}>{v.pitchType ?? "—"}</td>
                   <td className="num">{v.matches}</td>
-                  <td><button type="button" className="btn btn-ghost btn-sm" style={{ padding: "5px 9px", float: "right" }} onClick={() => edit(v)}><Icon d={IC.edit} size={14} /></button></td>
+                  <td>
+                    <span className="row" style={{ gap: 4, justifyContent: "flex-end" }}>
+                      <button type="button" className="btn btn-ghost btn-sm" style={{ padding: "5px 9px" }} onClick={() => edit(v)}><Icon d={IC.edit} size={14} /></button>
+                      <button type="button" className="btn btn-ghost btn-sm" style={{ padding: "5px 9px", color: "var(--danger)" }} disabled={busy} onClick={() => remove(v)}><Icon d={IC.trash} size={14} /></button>
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -243,8 +243,12 @@ model Team {
   bowlingStats   PlayerMatchBowlingStats[]
   standings      TeamStanding[]
 
-  @@unique([name])
-  @@unique([shortName])
+  /// name/shortName are unique among ACTIVE teams only — enforced by partial
+  /// unique indexes (teams_name_active_key / teams_shortName_active_key,
+  /// `WHERE "deletedAt" IS NULL`) added in a hand-written migration, since
+  /// Prisma's @@unique can't express a WHERE clause. A deleted team keeps its
+  /// original name (so completed-match scorecards stay correct forever) but
+  /// never blocks a new team — or a CSV import row — from reusing that name.
   @@index([deletedAt])
   @@map("teams")
 }
@@ -431,7 +435,11 @@ model Match {
   battingStats PlayerMatchBattingStats[]
   bowlingStats PlayerMatchBowlingStats[]
 
-  @@unique([seasonId, matchNumber])
+  /// matchNumber is unique among ACTIVE matches per season only — a partial
+  /// unique index (matches_seasonId_matchNumber_active_key, `WHERE
+  /// "deletedAt" IS NULL`) added in a hand-written migration, the same
+  /// pattern as Team.name/shortName above. A deleted match keeps its number
+  /// for history but never blocks a new fixture from reusing it.
   @@index([status, scheduledAt])
   @@index([deletedAt])
   @@map("matches")

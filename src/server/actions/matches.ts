@@ -17,6 +17,13 @@ import { writeAudit } from "@/server/audit";
 import { ActionError } from "@/server/errors";
 import { runAction, type ActionResult } from "@/server/result";
 import { refreshSnapshot } from "@/server/scoring/snapshot";
+import { rebuildSeasonStats } from "@/server/scoring/leaderboard";
+import {
+  revalidatePublic,
+  PUBLIC_HOME,
+  PUBLIC_MATCHES,
+  PUBLIC_LEADERBOARD,
+} from "@/server/revalidate";
 
 export async function createMatch(
   raw: unknown,
@@ -32,10 +39,11 @@ export async function createMatch(
       throw new ActionError("VALIDATION", "Both teams must exist and be active");
     }
 
-    // Match number is unique per season (incl. deleted matches that still hold
-    // the slot). Give a clear message instead of a cryptic "concurrent write".
+    // Match number is unique per season among ACTIVE matches only — a deleted
+    // match's number is free to reuse. Give a clear message instead of a
+    // cryptic "concurrent write" if an active one really does clash.
     const clash = await prisma.match.findFirst({
-      where: { seasonId: input.seasonId, matchNumber: input.matchNumber },
+      where: { seasonId: input.seasonId, matchNumber: input.matchNumber, deletedAt: null },
       select: { id: true },
     });
     if (clash) {
@@ -233,6 +241,11 @@ export async function setToss(
   });
 }
 
+/**
+ * Soft delete — only this match. Teams/players that played it are untouched;
+ * deliveries/stats/snapshot stay in the database (hidden, not erased) since
+ * every public/admin read already filters through `match.deletedAt`.
+ */
 export async function softDeleteMatch(
   raw: unknown,
 ): Promise<ActionResult<{ id: string }>> {
@@ -264,6 +277,21 @@ export async function softDeleteMatch(
         before: match,
       });
     });
+
+    // A completed match contributed to career stats/standings — rebuild so
+    // those numbers stop counting it. Never block the delete on this.
+    if (match.status === "COMPLETED") {
+      try {
+        await prisma.$transaction(
+          (tx) => rebuildSeasonStats(tx, match.seasonId, `match:${id} soft-delete`),
+          { timeout: 60000, maxWait: 10000 },
+        );
+      } catch (err) {
+        console.error("[softDeleteMatch] leaderboard rebuild failed:", err);
+      }
+    }
+
+    revalidatePublic(PUBLIC_HOME, PUBLIC_MATCHES, PUBLIC_LEADERBOARD);
     return { id };
   });
 }

@@ -79,7 +79,10 @@ export function Ball({
   if (v === "4") cls += " ball-four";
   else if (v === "6") cls += " ball-six";
   else if (v === "W") cls += " ball-w";
-  else if (v === "WD" || v === "NB") cls += " ball-" + v.toLowerCase();
+  // A wide with extra runs ("WD5") stays wide-colored — it's still a wide,
+  // not a boundary off the bat.
+  else if (v.startsWith("WD")) cls += " ball-wd";
+  else if (v === "NB") cls += " ball-nb";
   else if (v !== "0" && v !== "·") cls += " ball-run";
   if (sm) cls += " ball-sm";
   return (
@@ -112,12 +115,15 @@ export function BallStrip({
 }
 
 function ballWord(label: string): string {
+  if (label.startsWith("WD")) {
+    const total = label.slice(2);
+    return total ? `wide, ${total} total` : "wide";
+  }
   switch (label) {
     case "0": return "dot ball";
     case "4": return "four";
     case "6": return "six";
     case "W": return "wicket";
-    case "WD": return "wide";
     case "NB": return "no ball";
     default: return `${label} runs`;
   }

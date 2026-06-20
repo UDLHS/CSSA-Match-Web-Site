@@ -498,6 +498,24 @@ describe("base calculations", () => {
     expect(s.strikerId).toBe("B");
   });
 
+  it("a wide that reaches the boundary scores the full total (1 + 4 = 5 wides) and does not rotate the strike", () => {
+    const s = replayInnings(cfg(), [
+      ball({ extraType: "WIDE", extraRuns: 5, extrasAreBoundary: true }),
+    ]);
+    expect(s.totalRuns).toBe(5);
+    expect(s.extras.wides).toBe(5);
+    expect(s.bowlers["X"].runsConceded).toBe(5);
+    expect(s.strikerId).toBe("A"); // nobody ran — the ball just rolled to the rope
+  });
+
+  it("a wide where the batters physically run an odd number DOES rotate the strike", () => {
+    // WD + 3 ran (not a boundary) = 4 wide extras; the 3 ran is odd
+    const s = replayInnings(cfg(), [ball({ extraType: "WIDE", extraRuns: 4 })]);
+    expect(s.totalRuns).toBe(4);
+    expect(s.extras.wides).toBe(4);
+    expect(s.strikerId).toBe("B");
+  });
+
   it("a no-ball counts as a ball faced by the striker; a wide does not", () => {
     const s = replayInnings(cfg(), [
       ball({ extraType: "NO_BALL", extraRuns: 1 }),

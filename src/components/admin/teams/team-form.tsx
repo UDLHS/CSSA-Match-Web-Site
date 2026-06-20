@@ -83,7 +83,7 @@ export function TeamForm({
   };
 
   const onDelete = async () => {
-    if (!editing || !confirm("Soft-delete this team? History is preserved.")) return;
+    if (!editing || !confirm(`Delete ${form.name}? This also removes every player on the squad and every match this team has played (their opponents' stats will be recalculated). Upcoming or live matches block this — remove those first. History is hidden, not erased.`)) return;
     setBusy(true);
     const res = await softDeleteTeam(init!.id!);
     if (!res.ok) { setError(res.error.message); setBusy(false); return; }

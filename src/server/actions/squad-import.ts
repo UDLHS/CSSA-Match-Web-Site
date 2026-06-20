@@ -145,7 +145,9 @@ export async function importSquadCsv(
       throw new ActionError("VALIDATION", "No usable rows found in the CSV.");
     }
 
-    // Pre-load existing teams (names + shortNames are globally unique).
+    // Pre-load existing ACTIVE teams. name/shortName are only unique among
+    // active teams (a partial DB index) — a deleted team never blocks a new
+    // one from reusing its old name, so we don't need to special-case it here.
     const existingTeams = await prisma.team.findMany({
       select: { id: true, name: true, shortName: true, deletedAt: true },
     });

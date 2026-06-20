@@ -311,7 +311,7 @@ interface BallRow {
 
 function ballLabel(d: BallRow): string {
   if (d.wicket && d.wicket.type !== "RETIRED_HURT") return "W";
-  if (d.extraType === "WIDE") return "WD";
+  if (d.extraType === "WIDE") return d.extraRuns > 1 ? `WD${d.extraRuns}` : "WD";
   if (d.extraType === "NO_BALL") return "NB";
   if (d.extraType === "BYE" || d.extraType === "LEG_BYE") return String(d.extraRuns);
   return String(d.runsOffBat);

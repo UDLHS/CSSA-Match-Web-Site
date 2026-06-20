@@ -33,6 +33,7 @@ export function ScoringConsole({ initial }: { initial: ScoringStateDTO }) {
   const [error, setError] = useState<string | null>(null);
   const [wicketOpen, setWicketOpen] = useState(false);
   const [byePrompt, setByePrompt] = useState<"BYE" | "LEG_BYE" | null>(null);
+  const [widePrompt, setWidePrompt] = useState(false);
   const [retireOpen, setRetireOpen] = useState(false);
   const [completeOpen, setCompleteOpen] = useState(false);
 
@@ -93,6 +94,10 @@ export function ScoringConsole({ initial }: { initial: ScoringStateDTO }) {
       setByePrompt(type);
       return;
     }
+    if (type === "WIDE") {
+      setWidePrompt(true);
+      return;
+    }
     void run(() =>
       consoleRecordDelivery(mid, {
         inningsId: innings.id,
@@ -118,6 +123,29 @@ export function ScoringConsole({ initial }: { initial: ScoringStateDTO }) {
         runsOffBat: 0,
         extraType: type,
         extraRuns: runs,
+      }),
+    );
+  };
+
+  /**
+   * `extra` is the runs scored IN ADDITION to the automatic wide — 0 is the
+   * common case (just "WB"). The total sent to the engine is 1 + extra; 4
+   * extra is treated as the ball running to the boundary (no strike
+   * rotation), matching how a missed wide actually reaches the rope.
+   */
+  const recordWide = (extra: number) => {
+    setWidePrompt(false);
+    if (!innings || !bowlerId) return;
+    void run(() =>
+      consoleRecordDelivery(mid, {
+        inningsId: innings.id,
+        idempotencyKey: key(),
+        expectedSequence: innings.nextSequence,
+        bowlerId,
+        runsOffBat: 0,
+        extraType: "WIDE",
+        extraRuns: 1 + extra,
+        extrasAreBoundary: extra === 4,
       }),
     );
   };
@@ -292,6 +320,13 @@ export function ScoringConsole({ initial }: { initial: ScoringStateDTO }) {
         />
       )}
 
+      {widePrompt && (
+        <WidePrompt
+          onPick={recordWide}
+          onCancel={() => setWidePrompt(false)}
+        />
+      )}
+
       {retireOpen && (
         <RetireDialog
           innings={innings}
@@ -463,7 +498,7 @@ function LastBalls({ innings, onUndo, busy }: { innings: ConsoleInnings; onUndo:
           {innings.lastBalls.map((b, i) => (
             <div key={b.sequence} className="row" style={{ gap: 10, padding: "6px 4px", borderBottom: "1px solid var(--border)" }}>
               <span className="t-num" style={{ fontSize: 11.5, color: "var(--muted)", width: 30, flex: "none" }}>{b.overBall}</span>
-              <Ball v={b.label.length > 2 ? "0" : b.label} sm />
+              <Ball v={b.label} sm />
               <span style={{ fontSize: 12, color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.text}</span>
               {i === 0 && (
                 <button type="button" className="btn btn-ghost btn-sm" style={{ marginLeft: "auto", padding: "3px 9px", fontSize: 11 }} onClick={onUndo} disabled={busy}>
@@ -597,6 +632,31 @@ function RunPrompt({ title, onPick, onCancel }: { title: string; onPick: (r: num
         <div className="grid grid-cols-4" style={{ gap: 8 }}>
           {[1, 2, 3, 4].map((r) => (
             <button key={r} type="button" className="btn btn-soft" style={{ height: 52, fontFamily: "var(--font-display)", fontSize: 22 }} onClick={() => onPick(r)}>{r}</button>
+          ))}
+        </div>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={onCancel}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Every wide is at least 1 run automatically — this asks how many MORE were
+ * run (or reached the boundary). 0 stays a plain "WB"; 4 is treated as the
+ * ball beating the keeper to the rope (no strike rotation), matching how a
+ * missed wide actually goes for four in practice.
+ */
+function WidePrompt({ onPick, onCancel }: { onPick: (extra: number) => void; onCancel: () => void }) {
+  return (
+    <div className="overlay" onClick={onCancel} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()} className="card" style={{ width: 320, maxWidth: "100%", padding: 22, display: "flex", flexDirection: "column", gap: 14 }}>
+        <span className="t-h3">Wide — any extra runs?</span>
+        <span style={{ fontSize: 11.5, color: "var(--muted)" }}>The wide itself is always 1 run. Pick how many more were run, or reached the boundary.</span>
+        <div className="grid grid-cols-5" style={{ gap: 8 }}>
+          {[0, 1, 2, 3, 4].map((r) => (
+            <button key={r} type="button" className="btn btn-soft" style={{ height: 52, fontFamily: "var(--font-display)", fontSize: r === 0 ? 14 : 22 }} onClick={() => onPick(r)}>
+              {r === 0 ? "WB" : r}
+            </button>
           ))}
         </div>
         <button type="button" className="btn btn-ghost btn-sm" onClick={onCancel}>Cancel</button>
