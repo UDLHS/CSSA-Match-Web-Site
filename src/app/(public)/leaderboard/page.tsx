@@ -1,4 +1,5 @@
 import { LeaderboardTable } from "@/components/public/leaderboard-table";
+import { StandingsTable } from "@/components/public/standings-table";
 import type {
   LbBattingRow,
   LbBowlingRow,
@@ -8,6 +9,7 @@ import type {
 import {
   getActiveSeason,
   getLeaderboard,
+  getPublicStandings,
   listTeams,
 } from "@/server/queries/public";
 
@@ -17,11 +19,12 @@ export const metadata = { title: "Leaderboard — Cricket Fiesta '26" };
 
 export default async function LeaderboardPage() {
   const season = await getActiveSeason();
-  const [batting, bowling, overall, teams] = await Promise.all([
+  const [batting, bowling, overall, teams, standings] = await Promise.all([
     season ? getLeaderboard(season.id, "BATTING") : null,
     season ? getLeaderboard(season.id, "BOWLING") : null,
     season ? getLeaderboard(season.id, "OVERALL") : null,
     listTeams(),
+    season ? getPublicStandings(season.id) : Promise.resolve([]),
   ]);
 
   const teamRefs: LbTeamRef[] = teams.map((t) => ({
@@ -45,6 +48,12 @@ export default async function LeaderboardPage() {
       }}
     >
       <h1 className="t-display">Leaderboard</h1>
+
+      <section style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <h2 className="t-h2">Team standings</h2>
+        <StandingsTable groups={standings} />
+      </section>
+
       <LeaderboardTable
         batting={(batting?.payload as LbBattingRow[]) ?? []}
         bowling={(bowling?.payload as LbBowlingRow[]) ?? []}

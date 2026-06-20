@@ -7,3 +7,4 @@ export * from "./scoring";
 export * from "./votes";
 export * from "./settings";
 export * from "./sponsors";
+export * from "./standings";

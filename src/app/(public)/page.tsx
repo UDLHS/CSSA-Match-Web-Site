@@ -1,6 +1,7 @@
 import { LiveHero } from "@/components/public/live-hero";
 import { MatchesCarousel } from "@/components/public/matches-carousel";
 import { LeaderboardPreview } from "@/components/public/leaderboard-preview";
+import { StandingsTable } from "@/components/public/standings-table";
 import { PopularPlayers } from "@/components/public/popular-players";
 import { AdSlot } from "@/components/public/ad-slot";
 import { HomeTicker } from "@/components/public/home-ticker";
@@ -16,6 +17,7 @@ import {
   getFeaturedMatchSnapshot,
   getLeaderboard,
   getPopularPlayers,
+  getPublicStandings,
   listMatchCards,
 } from "@/server/queries/public";
 import { getActiveAd } from "@/server/queries/ads";
@@ -25,7 +27,7 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const season = await getActiveSeason();
-  const [featured, previous, live, upcoming, batting, bowling, overall, popular, bannerAd, skyscraperAd] =
+  const [featured, previous, live, upcoming, batting, bowling, overall, popular, standings, bannerAd, skyscraperAd] =
     await Promise.all([
       getFeaturedMatchSnapshot(),
       listMatchCards("previous"),
@@ -35,6 +37,7 @@ export default async function HomePage() {
       season ? getLeaderboard(season.id, "BOWLING") : null,
       season ? getLeaderboard(season.id, "OVERALL") : null,
       getPopularPlayers(7),
+      season ? getPublicStandings(season.id) : Promise.resolve([]),
       getActiveAd("HOME_LEADERBOARD_BANNER"),
       getActiveAd("HOME_SKYSCRAPER"),
     ]);
@@ -97,6 +100,17 @@ export default async function HomePage() {
           <PopularPlayers rows={popularRows} />
         </div>
       </div>
+
+      {/* Team points table — below the leaderboard, scrollable so a long table
+          (many groups/teams) never stretches the page. */}
+      {standings.length > 0 && (
+        <section style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <h2 className="t-h2">Team standings</h2>
+          <div style={{ maxHeight: "clamp(320px, 52dvh, 560px)", overflowY: "auto" }}>
+            <StandingsTable groups={standings} />
+          </div>
+        </section>
+      )}
     </div>
   );
 }

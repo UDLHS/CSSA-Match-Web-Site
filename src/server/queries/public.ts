@@ -3,6 +3,7 @@ import type { LeaderboardKind, MatchStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import type { LiveSnapshotPayload } from "@/server/scoring/snapshot";
 import { TAG, TTL } from "@/server/cache";
+import { buildStandings, type StandingGroup } from "@/server/queries/standings";
 
 /**
  * Public read layer — no session, read-only, only published data.
@@ -328,4 +329,14 @@ export const listSquads = unstable_cache(
   },
   ["public:listSquads"],
   { revalidate: TTL.squads, tags: [TAG.squads] },
+);
+
+/**
+ * Public points table. Tagged with both `standings` (manual edits) and
+ * `matches` (so derived W/L refreshes the moment a match completes).
+ */
+export const getPublicStandings = unstable_cache(
+  async (seasonId: string): Promise<StandingGroup[]> => buildStandings(seasonId),
+  ["public:getPublicStandings"],
+  { revalidate: TTL.slow, tags: [TAG.standings, TAG.matches] },
 );

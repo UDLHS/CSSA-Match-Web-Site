@@ -166,6 +166,13 @@ enum LeaderboardKind {
   POPULARITY
 }
 
+/// Qualification badge shown beside a team in the points table (Q / E).
+enum StandingStatus {
+  NONE
+  QUALIFIED // "Q" — through to the next stage
+  ELIMINATED // "E" — knocked out
+}
+
 // ----------------------------------------------------------------
 // Auth & roles (Supabase Auth owns credentials; User.id = auth.users.id)
 // ----------------------------------------------------------------
@@ -234,6 +241,7 @@ model Team {
   matchWins      Match[]                  @relation("MatchWinner")
   battingStats   PlayerMatchBattingStats[]
   bowlingStats   PlayerMatchBowlingStats[]
+  standings      TeamStanding[]
 
   @@unique([name])
   @@unique([shortName])
@@ -326,6 +334,7 @@ model Season {
   matches              Match[]
   leaderboardSnapshots LeaderboardSnapshot[]
   careerStats          PlayerCareerStats[]
+  standings            TeamStanding[]
 
   @@unique([tournamentId, label])
   @@map("seasons")
@@ -704,6 +713,32 @@ model LeaderboardSnapshot {
 
   @@index([seasonId, kind, builtAt])
   @@map("leaderboard_snapshots")
+}
+
+/// Admin-managed group standings / points table.
+///
+/// Deliberately decoupled from the scoring engine so it never touches the live
+/// read path: P / W / L / NR are DERIVED at read time from completed matches
+/// (Match.status + winnerTeamId), while `points`, `netRunRate` and the
+/// qualification badge are entered by an admin. One row per team per group.
+/// Display order is points desc, then netRunRate desc.
+model TeamStanding {
+  id         String         @id @default(cuid())
+  seasonId   String
+  season     Season         @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  teamId     String
+  team       Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  groupName  String         @default("") // "Super 8 Group 1"; "" = single table
+  points     Int            @default(0)
+  netRunRate Float          @default(0)
+  status     StandingStatus @default(NONE)
+  sortHint   Int            @default(0) // optional manual nudge for ties
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@unique([seasonId, teamId])
+  @@index([seasonId])
+  @@map("team_standings")
 }
 
 // ----------------------------------------------------------------
