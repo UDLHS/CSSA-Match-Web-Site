@@ -3,20 +3,23 @@
 import { useEffect, useRef, useState } from "react";
 import type { LiveSnapshotRead } from "@/lib/live-types";
 
-const FALLBACK_POLL_MS = 15_000;
+const POLL_MS = 3_000;
 
 /**
  * Live snapshot subscription (backend-spec §7 read model).
  *
- * Primary transport is SSE (`/api/matches/:id/stream`) — the server pushes
- * the snapshot the instant its version changes. A slow polling loop runs as a
- * safety net to cover any SSE gap (serverless window close, transient drop).
- * Both read the SAME denormalized row, so they can never disagree.
+ * Transport is **short polling** against `/api/matches/:id/live?since=<v>`,
+ * which reads the denormalized snapshot row (cached ~2s, so N concurrent
+ * viewers collapse into ~one DB read per window). We deliberately do NOT hold
+ * an SSE connection open per viewer: on serverless each open stream pins a
+ * function instance for its whole lifetime, so a few hundred viewers across a
+ * multi-hour match would burn hundreds of function-hours. A 5s poll is a tiny
+ * request (`{changed:false}` when the version is unchanged) and scales to
+ * hundreds/thousands of viewers cheaply — latency stays well under a ball.
  */
 export function useLiveSnapshot(initial: LiveSnapshotRead | null) {
   const [snap, setSnap] = useState(initial);
   const [degraded, setDegraded] = useState(false);
-  const lastEventAt = useRef(Date.now());
 
   // When the parent server component re-renders with a different `initial`
   // (e.g. the home page's "featured match" changes from upcoming to live), or
@@ -40,43 +43,12 @@ export function useLiveSnapshot(initial: LiveSnapshotRead | null) {
   const versionRef = useRef(snap?.version ?? 0);
   versionRef.current = snap?.version ?? 0;
 
-  // ---- SSE ----
-  useEffect(() => {
-    if (!matchId || !inPlay || typeof EventSource === "undefined") return;
-    const es = new EventSource(`/api/matches/${matchId}/stream`);
-
-    const onSnapshot = (e: MessageEvent) => {
-      lastEventAt.current = Date.now();
-      setDegraded(false);
-      try {
-        const data = JSON.parse(e.data) as LiveSnapshotRead;
-        if (data.version >= versionRef.current) setSnap(data);
-      } catch {
-        /* ignore malformed frame */
-      }
-    };
-    const onPing = () => {
-      lastEventAt.current = Date.now();
-      setDegraded(false);
-    };
-    es.addEventListener("snapshot", onSnapshot);
-    es.addEventListener("ping", onPing);
-    es.onerror = () => setDegraded(true); // EventSource auto-reconnects
-
-    return () => {
-      es.removeEventListener("snapshot", onSnapshot);
-      es.removeEventListener("ping", onPing);
-      es.close();
-    };
-  }, [matchId, inPlay]);
-
-  // ---- Polling safety net ----
   useEffect(() => {
     if (!matchId || !inPlay) return;
+    let cancelled = false;
+
     const tick = async () => {
-      if (document.hidden) return;
-      // Only poll if SSE has gone quiet — otherwise SSE has it covered.
-      if (Date.now() - lastEventAt.current < FALLBACK_POLL_MS) return;
+      if (document.hidden) return; // backgrounded tabs don't poll
       try {
         const res = await fetch(
           `/api/matches/${matchId}/live?since=${versionRef.current}`,
@@ -84,8 +56,8 @@ export function useLiveSnapshot(initial: LiveSnapshotRead | null) {
         );
         if (!res.ok) throw new Error(String(res.status));
         const j = await res.json();
+        if (cancelled) return;
         setDegraded(false);
-        lastEventAt.current = Date.now();
         if (j.changed) {
           setSnap({
             matchId: j.matchId,
@@ -96,11 +68,16 @@ export function useLiveSnapshot(initial: LiveSnapshotRead | null) {
           });
         }
       } catch {
-        setDegraded(true); // keep the last snapshot; retry next tick
+        if (!cancelled) setDegraded(true); // keep last snapshot; retry next tick
       }
     };
-    const interval = setInterval(tick, FALLBACK_POLL_MS);
-    return () => clearInterval(interval);
+
+    tick(); // immediate first poll so a freshly-live card catches up fast
+    const interval = setInterval(tick, POLL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, [matchId, inPlay]);
 
   return { snap, degraded };

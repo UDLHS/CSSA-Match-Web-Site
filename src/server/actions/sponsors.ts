@@ -12,6 +12,8 @@ import { requireRole, MASTER_DATA_ROLES } from "@/server/auth";
 import { writeAudit } from "@/server/audit";
 import { ActionError } from "@/server/errors";
 import { runAction, type ActionResult } from "@/server/result";
+import { bustTags } from "@/server/revalidate";
+import { TAG } from "@/server/cache";
 
 // ---- Sponsors ----------------------------------------------------------
 
@@ -24,6 +26,7 @@ export async function createSponsor(raw: unknown): Promise<ActionResult<{ id: st
       await writeAudit(tx, { userId: actor.userId, action: "sponsor.create", entityType: "Sponsor", entityId: created.id, after: input });
       return created;
     });
+    bustTags(TAG.sponsors);
     return { id: sponsor.id };
   });
 }
@@ -38,6 +41,7 @@ export async function updateSponsor(raw: unknown): Promise<ActionResult<{ id: st
       await tx.sponsor.update({ where: { id }, data });
       await writeAudit(tx, { userId: actor.userId, action: "sponsor.update", entityType: "Sponsor", entityId: id, before, after: data });
     });
+    bustTags(TAG.sponsors);
     return { id };
   });
 }
@@ -53,6 +57,7 @@ export async function deleteSponsor(raw: unknown): Promise<ActionResult<{ id: st
       await tx.sponsor.delete({ where: { id } });
       await writeAudit(tx, { userId: actor.userId, action: "sponsor.delete", entityType: "Sponsor", entityId: id, before: sponsor });
     });
+    bustTags(TAG.sponsors);
     return { id };
   });
 }
@@ -70,6 +75,7 @@ export async function createAd(raw: unknown): Promise<ActionResult<{ id: string 
       await writeAudit(tx, { userId: actor.userId, action: "ad.create", entityType: "AdCreative", entityId: created.id, after: input });
       return created;
     });
+    bustTags(TAG.sponsors);
     return { id: ad.id };
   });
 }
@@ -84,6 +90,7 @@ export async function updateAd(raw: unknown): Promise<ActionResult<{ id: string 
       await tx.adCreative.update({ where: { id }, data });
       await writeAudit(tx, { userId: actor.userId, action: "ad.update", entityType: "AdCreative", entityId: id, before, after: data });
     });
+    bustTags(TAG.sponsors);
     return { id };
   });
 }
@@ -99,6 +106,7 @@ export async function toggleAd(raw: unknown): Promise<ActionResult<{ id: string;
       await tx.adCreative.update({ where: { id }, data: { isActive: next } });
       await writeAudit(tx, { userId: actor.userId, action: "ad.toggle", entityType: "AdCreative", entityId: id, after: { isActive: next } });
     });
+    bustTags(TAG.sponsors);
     return { id, isActive: next };
   });
 }
@@ -113,6 +121,7 @@ export async function deleteAd(raw: unknown): Promise<ActionResult<{ id: string 
       await tx.adCreative.delete({ where: { id } });
       await writeAudit(tx, { userId: actor.userId, action: "ad.delete", entityType: "AdCreative", entityId: id, before: ad });
     });
+    bustTags(TAG.sponsors);
     return { id };
   });
 }

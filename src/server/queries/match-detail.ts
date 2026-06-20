@@ -1,5 +1,7 @@
+import { unstable_cache } from "next/cache";
 import type { WicketType } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { TAG, TTL } from "@/server/cache";
 import { oversDisplay, currentRunRate, economyRate } from "@/lib/scoring";
 import { shortName } from "@/lib/format";
 import type {
@@ -29,7 +31,17 @@ const WICKET_LABEL: Record<WicketType, string> = {
   OTHER: "Out",
 };
 
-export async function getMatchDetailDTO(
+/**
+ * Cached for a couple of seconds: the match page polls this and many viewers
+ * of the same match share one DB read per window. Real-time enough for cricket.
+ */
+export const getMatchDetailDTO = unstable_cache(
+  getMatchDetailDTOImpl,
+  ["public:getMatchDetailDTO"],
+  { revalidate: TTL.live, tags: [TAG.matches] },
+);
+
+async function getMatchDetailDTOImpl(
   matchId: string,
 ): Promise<MatchDetailDTO | null> {
   const match = await prisma.match.findFirst({

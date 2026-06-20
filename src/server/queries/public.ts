@@ -1,6 +1,8 @@
+import { unstable_cache } from "next/cache";
 import type { LeaderboardKind, MatchStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import type { LiveSnapshotPayload } from "@/server/scoring/snapshot";
+import { TAG, TTL } from "@/server/cache";
 
 /**
  * Public read layer — no session, read-only, only published data.
@@ -38,61 +40,73 @@ function toSnapshotRead(row: {
   };
 }
 
-/** Live snapshot for one match (polling/SSE read). */
-export async function getMatchSnapshot(
-  matchId: string,
-): Promise<SnapshotRead | null> {
-  const row = await prisma.scoreSnapshot.findFirst({
-    where: { matchId, match: publicMatchWhere },
-  });
-  return row ? toSnapshotRead(row) : null;
-}
+/**
+ * Live snapshot for one match (polling/SSE read). Cached for a couple of
+ * seconds so a popular live match's many concurrent reads collapse into ~one
+ * DB hit while staying effectively real-time.
+ */
+export const getMatchSnapshot = unstable_cache(
+  async (matchId: string): Promise<SnapshotRead | null> => {
+    const row = await prisma.scoreSnapshot.findFirst({
+      where: { matchId, match: publicMatchWhere },
+    });
+    return row ? toSnapshotRead(row) : null;
+  },
+  ["public:getMatchSnapshot"],
+  { revalidate: TTL.live, tags: [TAG.matches] },
+);
 
 /**
  * Hero pick: a LIVE / INNINGS_BREAK match first, else the next UPCOMING,
  * else the most recently completed.
  */
-export async function getFeaturedMatchSnapshot(): Promise<SnapshotRead | null> {
-  const live = await prisma.scoreSnapshot.findFirst({
-    where: { status: { in: ["LIVE", "INNINGS_BREAK"] }, match: publicMatchWhere },
-    orderBy: { updatedAt: "desc" },
-  });
-  if (live) return toSnapshotRead(live);
+export const getFeaturedMatchSnapshot = unstable_cache(
+  async (): Promise<SnapshotRead | null> => {
+    const live = await prisma.scoreSnapshot.findFirst({
+      where: { status: { in: ["LIVE", "INNINGS_BREAK"] }, match: publicMatchWhere },
+      orderBy: { updatedAt: "desc" },
+    });
+    if (live) return toSnapshotRead(live);
 
-  const upcoming = await prisma.match.findFirst({
-    where: { ...publicMatchWhere, status: "UPCOMING" },
-    orderBy: { scheduledAt: "asc" },
-    include: { snapshot: true },
-  });
-  if (upcoming?.snapshot) return toSnapshotRead(upcoming.snapshot);
+    const upcoming = await prisma.match.findFirst({
+      where: { ...publicMatchWhere, status: "UPCOMING" },
+      orderBy: { scheduledAt: "asc" },
+      include: { snapshot: true },
+    });
+    if (upcoming?.snapshot) return toSnapshotRead(upcoming.snapshot);
 
-  const completed = await prisma.match.findFirst({
-    where: { ...publicMatchWhere, status: { in: ["COMPLETED", "ABANDONED"] } },
-    orderBy: { scheduledAt: "desc" },
-    include: { snapshot: true },
-  });
-  return completed?.snapshot ? toSnapshotRead(completed.snapshot) : null;
-}
+    const completed = await prisma.match.findFirst({
+      where: { ...publicMatchWhere, status: { in: ["COMPLETED", "ABANDONED"] } },
+      orderBy: { scheduledAt: "desc" },
+      include: { snapshot: true },
+    });
+    return completed?.snapshot ? toSnapshotRead(completed.snapshot) : null;
+  },
+  ["public:getFeaturedMatchSnapshot"],
+  { revalidate: TTL.matchList, tags: [TAG.matches] },
+);
 
 export type MatchCardTab = "live" | "upcoming" | "previous";
 
 /** Card list per tab — straight from snapshots (already denormalized). */
-export async function listMatchCards(
-  tab: MatchCardTab,
-): Promise<SnapshotRead[]> {
-  const statuses: MatchStatus[] =
-    tab === "live"
-      ? ["LIVE", "INNINGS_BREAK"]
-      : tab === "upcoming"
-        ? ["UPCOMING"]
-        : ["COMPLETED", "ABANDONED"];
-  const rows = await prisma.scoreSnapshot.findMany({
-    where: { status: { in: statuses }, match: publicMatchWhere },
-    orderBy: { match: { scheduledAt: tab === "previous" ? "desc" : "asc" } },
-    take: 30,
-  });
-  return rows.map(toSnapshotRead);
-}
+export const listMatchCards = unstable_cache(
+  async (tab: MatchCardTab): Promise<SnapshotRead[]> => {
+    const statuses: MatchStatus[] =
+      tab === "live"
+        ? ["LIVE", "INNINGS_BREAK"]
+        : tab === "upcoming"
+          ? ["UPCOMING"]
+          : ["COMPLETED", "ABANDONED"];
+    const rows = await prisma.scoreSnapshot.findMany({
+      where: { status: { in: statuses }, match: publicMatchWhere },
+      orderBy: { match: { scheduledAt: tab === "previous" ? "desc" : "asc" } },
+      take: 30,
+    });
+    return rows.map(toSnapshotRead);
+  },
+  ["public:listMatchCards"],
+  { revalidate: TTL.matchList, tags: [TAG.matches] },
+);
 
 /** Full scorecard: innings, batting/bowling tables, FoW, extras, meta. */
 export async function getMatchDetail(matchId: string) {
@@ -137,26 +151,38 @@ export async function getMatchDetail(matchId: string) {
 }
 
 /** Latest frozen leaderboard payload for a tab. */
-export async function getLeaderboard(
-  seasonId: string,
-  kind: LeaderboardKind,
-): Promise<{ payload: unknown; builtAt: string } | null> {
-  const snap = await prisma.leaderboardSnapshot.findFirst({
-    where: { seasonId, kind },
-    orderBy: { builtAt: "desc" },
-  });
-  return snap
-    ? { payload: snap.payload, builtAt: snap.builtAt.toISOString() }
-    : null;
-}
+export const getLeaderboard = unstable_cache(
+  async (
+    seasonId: string,
+    kind: LeaderboardKind,
+  ): Promise<{ payload: unknown; builtAt: string } | null> => {
+    const snap = await prisma.leaderboardSnapshot.findFirst({
+      where: { seasonId, kind },
+      orderBy: { builtAt: "desc" },
+    });
+    return snap
+      ? { payload: snap.payload, builtAt: snap.builtAt.toISOString() }
+      : null;
+  },
+  ["public:getLeaderboard"],
+  { revalidate: TTL.slow, tags: [TAG.leaderboard] },
+);
 
-/** The active season (drives every public page). */
-export async function getActiveSeason() {
-  return prisma.season.findFirst({
-    where: { isActive: true },
-    include: { tournament: true, settings: true },
-  });
-}
+/**
+ * The active season (drives every public page). Essentially constant during a
+ * tournament, so cached for a couple of minutes — public consumers only read
+ * `season.id`. Keeps this off the per-view DB path.
+ */
+export const getActiveSeason = unstable_cache(
+  async () => {
+    return prisma.season.findFirst({
+      where: { isActive: true },
+      include: { tournament: true, settings: true },
+    });
+  },
+  ["public:getActiveSeason"],
+  { revalidate: 120 },
+);
 
 /** Players grid: every active player + their active-season stat line. */
 export async function listPlayersWithStats(seasonId?: string) {
@@ -227,22 +253,26 @@ export async function getPlayerProfile(playerId: string, seasonId?: string) {
 }
 
 /** Popular players — admin-set votes, ranked, top 3 highlighted in UI. */
-export async function getPopularPlayers(limit = 10) {
-  return prisma.popularVote.findMany({
-    where: { player: { deletedAt: null } },
-    include: {
-      player: {
-        include: {
-          team: {
-            select: { id: true, name: true, shortName: true, logoUrl: true, primaryColor: true },
+export const getPopularPlayers = unstable_cache(
+  async (limit = 10) => {
+    return prisma.popularVote.findMany({
+      where: { player: { deletedAt: null } },
+      include: {
+        player: {
+          include: {
+            team: {
+              select: { id: true, name: true, shortName: true, logoUrl: true, primaryColor: true },
+            },
           },
         },
       },
-    },
-    orderBy: { votes: "desc" },
-    take: limit,
-  });
-}
+      orderBy: { votes: "desc" },
+      take: limit,
+    });
+  },
+  ["public:getPopularPlayers"],
+  { revalidate: TTL.slow, tags: [TAG.votes] },
+);
 
 export async function listTeams() {
   return prisma.team.findMany({
@@ -260,7 +290,8 @@ export async function listTeams() {
  * Squads grouped by team for the public Players page — captain first, then
  * the batting-lineup order, with each player's active-season key stat.
  */
-export async function listSquads(seasonId?: string) {
+export const listSquads = unstable_cache(
+  async (seasonId?: string) => {
   return prisma.team.findMany({
     where: { deletedAt: null },
     select: {
@@ -294,4 +325,7 @@ export async function listSquads(seasonId?: string) {
     },
     orderBy: { name: "asc" },
   });
-}
+  },
+  ["public:listSquads"],
+  { revalidate: TTL.squads, tags: [TAG.squads] },
+);
