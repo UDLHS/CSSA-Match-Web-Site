@@ -13,10 +13,11 @@ import {
   revalidatePublic,
   PUBLIC_SQUADS,
   PUBLIC_LEADERBOARD,
+  PUBLIC_POPULAR,
 } from "@/server/revalidate";
 
 const revalidateTeamPages = () =>
-  revalidatePublic(PUBLIC_SQUADS, PUBLIC_LEADERBOARD);
+  revalidatePublic(PUBLIC_SQUADS, PUBLIC_LEADERBOARD, PUBLIC_POPULAR);
 
 export async function createTeam(
   raw: unknown,
@@ -73,7 +74,12 @@ export async function updateTeam(
   });
 }
 
-/** Soft delete — history that references the team stays intact. */
+/**
+ * Soft delete — history that references the team stays intact. Cascades to
+ * the team's own players (soft-deletes them too and closes their team-history
+ * record) so nobody is left visible on a "deleted" team's roster — match
+ * scorecards still resolve player names by id regardless of deletedAt.
+ */
 export async function softDeleteTeam(
   raw: unknown,
 ): Promise<ActionResult<{ id: string }>> {
@@ -102,9 +108,16 @@ export async function softDeleteTeam(
     }
 
     await prisma.$transaction(async (tx) => {
+      const players = await tx.player.findMany({
+        where: { teamId: id, deletedAt: null },
+        select: { id: true },
+      });
+      const playerIds = players.map((p) => p.id);
+      const now = new Date();
+
       await tx.team.update({
         where: { id },
-        data: { deletedAt: new Date(), status: "SUSPENDED" },
+        data: { deletedAt: now, status: "SUSPENDED" },
       });
       await writeAudit(tx, {
         userId: actor.userId,
@@ -113,6 +126,26 @@ export async function softDeleteTeam(
         entityId: id,
         before: team,
       });
+
+      if (playerIds.length > 0) {
+        await tx.player.updateMany({
+          where: { id: { in: playerIds } },
+          data: { deletedAt: now },
+        });
+        await tx.playerTeamHistory.updateMany({
+          where: { playerId: { in: playerIds }, toDate: null },
+          data: { toDate: now },
+        });
+        for (const playerId of playerIds) {
+          await writeAudit(tx, {
+            userId: actor.userId,
+            action: "player.softDelete",
+            entityType: "Player",
+            entityId: playerId,
+            details: `Cascaded from team.softDelete of "${team.name}"`,
+          });
+        }
+      }
     });
     revalidateTeamPages();
     return { id };

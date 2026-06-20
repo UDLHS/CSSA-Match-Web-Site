@@ -1,4 +1,5 @@
 import { SquadsView, type TeamSquad } from "@/components/public/squads-view";
+import { PageTicker } from "@/components/public/home-ticker";
 import { BATTING_STYLE_LABELS, BOWLING_STYLE_LABELS, ROLE_LABELS } from "@/lib/player-types";
 import { getActiveSeason, listSquads } from "@/server/queries/public";
 
@@ -55,6 +56,7 @@ export default async function PlayersPage() {
         width: "100%",
       }}
     >
+      <PageTicker />
       <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
         <h1 className="t-display">Squads</h1>
         <span className="t-small" style={{ color: "var(--muted)" }}>

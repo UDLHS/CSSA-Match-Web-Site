@@ -1,5 +1,5 @@
 import { MatchesList } from "@/components/public/matches-list";
-import { HomeTicker } from "@/components/public/home-ticker";
+import { PageTicker } from "@/components/public/home-ticker";
 import type { LiveSnapshotRead } from "@/lib/live-types";
 import { listMatchCards } from "@/server/queries/public";
 
@@ -26,7 +26,7 @@ export default async function MatchesPage() {
         width: "100%",
       }}
     >
-      <HomeTicker />
+      <PageTicker />
       <h1 className="t-display">Matches</h1>
       <MatchesList
         live={live as LiveSnapshotRead[]}

@@ -2,7 +2,9 @@ import { prisma } from "@/lib/db";
 import { requirePageRole } from "@/server/admin-guard";
 import { SUPER_ADMIN_ONLY } from "@/server/auth";
 import { DEFAULT_POINTS_CONFIG } from "@/lib/scoring";
+import { getDataCounts } from "@/server/queries/admin-entities";
 import { SettingsForm } from "@/components/admin/settings/settings-form";
+import { DataResetPanel } from "@/components/admin/settings/data-reset-panel";
 import { EmptyState } from "@/components/admin/kit";
 import { IC } from "@/components/public/icons";
 import type { PointsConfigInput } from "@/lib/validation/settings";
@@ -25,25 +27,29 @@ export default async function AdminSettingsPage() {
 
   const s = season.settings;
   const pc = (s?.pointsConfig as PointsConfigInput | null) ?? DEFAULT_POINTS_CONFIG;
+  const counts = await getDataCounts();
 
   return (
-    <SettingsForm
-      seasonId={season.id}
-      tournamentName={`${season.tournament.name} · ${season.label}`}
-      init={{
-        defaultFormat: s?.defaultFormat ?? "T20",
-        defaultOvers: s?.defaultOvers ?? 20,
-        defaultBallsPerOver: s?.defaultBallsPerOver ?? 6,
-        playersPerSide: s?.playersPerSide ?? 11,
-        pointsWin: s?.pointsWin ?? 2,
-        pointsTie: s?.pointsTie ?? 1,
-        pointsLoss: s?.pointsLoss ?? 0,
-        bonusPointEnabled: s?.bonusPointEnabled ?? false,
-        nrrTiebreak: s?.nrrTiebreak ?? true,
-        votingOpen: s?.votingOpen ?? false,
-        votesPublic: s?.votesPublic ?? true,
-      }}
-      pointsConfig={pc}
-    />
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <SettingsForm
+        seasonId={season.id}
+        tournamentName={`${season.tournament.name} · ${season.label}`}
+        init={{
+          defaultFormat: s?.defaultFormat ?? "T20",
+          defaultOvers: s?.defaultOvers ?? 20,
+          defaultBallsPerOver: s?.defaultBallsPerOver ?? 6,
+          playersPerSide: s?.playersPerSide ?? 11,
+          pointsWin: s?.pointsWin ?? 2,
+          pointsTie: s?.pointsTie ?? 1,
+          pointsLoss: s?.pointsLoss ?? 0,
+          bonusPointEnabled: s?.bonusPointEnabled ?? false,
+          nrrTiebreak: s?.nrrTiebreak ?? true,
+          votingOpen: s?.votingOpen ?? false,
+          votesPublic: s?.votesPublic ?? true,
+        }}
+        pointsConfig={pc}
+      />
+      <DataResetPanel counts={counts} />
+    </div>
   );
 }

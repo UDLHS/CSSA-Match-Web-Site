@@ -10,7 +10,7 @@ type SlotVariant = "leaderboard" | "skyscraper" | "banner";
  * invisible to visitors). Pass a pre-fetched `ad` so the parent can also decide
  * layout (e.g. collapse a reserved column) without a second query.
  *
- * Ads appear/disappear live on the home page because the HomeTicker re-renders
+ * Ads appear/disappear live because the page's PageTicker re-renders
  * this server component every few seconds.
  */
 export async function AdSlot({

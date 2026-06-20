@@ -112,6 +112,16 @@ export async function nextMatchNumber(seasonId: string): Promise<number> {
   return (last?.matchNumber ?? 0) + 1;
 }
 
+/** Row counts for the Settings "danger zone" — shown before a destructive wipe. */
+export async function getDataCounts() {
+  const [teams, players, matches] = await Promise.all([
+    prisma.team.count(),
+    prisma.player.count(),
+    prisma.match.count(),
+  ]);
+  return { teams, players, matches };
+}
+
 export async function listSponsorsAndAds() {
   const [sponsors, ads] = await Promise.all([
     prisma.sponsor.findMany({ orderBy: { tier: "asc" } }),

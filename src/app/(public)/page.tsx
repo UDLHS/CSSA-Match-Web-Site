@@ -4,7 +4,7 @@ import { LeaderboardPreview } from "@/components/public/leaderboard-preview";
 import { StandingsTable } from "@/components/public/standings-table";
 import { PopularPlayers } from "@/components/public/popular-players";
 import { AdSlot } from "@/components/public/ad-slot";
-import { HomeTicker } from "@/components/public/home-ticker";
+import { PageTicker } from "@/components/public/home-ticker";
 import type { LiveSnapshotRead } from "@/lib/live-types";
 import type {
   LbBattingRow,
@@ -64,7 +64,7 @@ export default async function HomePage() {
         width: "100%",
       }}
     >
-      <HomeTicker />
+      <PageTicker />
       <LiveHero initial={featured as LiveSnapshotRead | null} />
       {/* Only rendered when a creative is live — no empty placeholder. */}
       {bannerAd && <AdSlot placement="HOME_LEADERBOARD_BANNER" variant="leaderboard" ad={bannerAd} />}

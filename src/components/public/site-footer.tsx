@@ -4,7 +4,7 @@ import { getFooterPartners } from "@/server/queries/ads";
 /**
  * Footer. The "Our partners" strip lists ACTIVE sponsors from the database and
  * is hidden entirely when there are none — no placeholder chips. New sponsors
- * appear live (the home/matches HomeTicker re-renders the layout).
+ * appear live (each page's PageTicker re-renders the layout).
  */
 export async function SiteFooter() {
   const partners = await getFooterPartners();

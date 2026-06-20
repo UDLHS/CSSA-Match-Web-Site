@@ -1,5 +1,6 @@
 import { LeaderboardTable } from "@/components/public/leaderboard-table";
 import { StandingsTable } from "@/components/public/standings-table";
+import { PageTicker } from "@/components/public/home-ticker";
 import type {
   LbBattingRow,
   LbBowlingRow,
@@ -47,6 +48,7 @@ export default async function LeaderboardPage() {
         width: "100%",
       }}
     >
+      <PageTicker />
       <h1 className="t-display">Leaderboard</h1>
 
       <section style={{ display: "flex", flexDirection: "column", gap: 12 }}>
