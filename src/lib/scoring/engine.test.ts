@@ -516,6 +516,18 @@ describe("base calculations", () => {
     expect(s.strikerId).toBe("B");
   });
 
+  it("a no-ball hit for four credits the striker with a four (1 no-ball extra + 4 off the bat = 5 total)", () => {
+    const s = replayInnings(cfg(), [
+      ball({ extraType: "NO_BALL", extraRuns: 1, runsOffBat: 4 }),
+    ]);
+    expect(s.totalRuns).toBe(5);
+    expect(s.extras.noBalls).toBe(1);
+    expect(s.batters["A"].runs).toBe(4);
+    expect(s.batters["A"].fours).toBe(1);
+    expect(s.bowlers["X"].runsConceded).toBe(5);
+    expect(s.bowlers["X"].legalBalls).toBe(0); // a no-ball is never a legal ball
+  });
+
   it("a no-ball counts as a ball faced by the striker; a wide does not", () => {
     const s = replayInnings(cfg(), [
       ball({ extraType: "NO_BALL", extraRuns: 1 }),

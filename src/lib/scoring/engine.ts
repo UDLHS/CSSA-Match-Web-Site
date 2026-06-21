@@ -582,7 +582,11 @@ export function ballLabel(d: ProcessedDelivery): string {
   if (d.wicket) return "W";
   // A wide is always at least 1 run; show the total when more ran/boundary.
   if (d.extraType === "WIDE") return d.extraRuns > 1 ? `WD${d.extraRuns}` : "WD";
-  if (d.extraType === "NO_BALL") return "NB";
+  // A no-ball is always +1 extra; show the total when the bat also scored.
+  if (d.extraType === "NO_BALL") {
+    const total = d.runsOffBat + d.extraRuns;
+    return total > 1 ? `NB${total}` : "NB";
+  }
   if (d.extraType === "BYE" || d.extraType === "LEG_BYE") {
     return String(d.extraRuns);
   }

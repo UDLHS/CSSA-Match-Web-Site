@@ -34,6 +34,7 @@ export function ScoringConsole({ initial }: { initial: ScoringStateDTO }) {
   const [wicketOpen, setWicketOpen] = useState(false);
   const [byePrompt, setByePrompt] = useState<"BYE" | "LEG_BYE" | null>(null);
   const [widePrompt, setWidePrompt] = useState(false);
+  const [noBallPrompt, setNoBallPrompt] = useState(false);
   const [retireOpen, setRetireOpen] = useState(false);
   const [completeOpen, setCompleteOpen] = useState(false);
 
@@ -98,6 +99,10 @@ export function ScoringConsole({ initial }: { initial: ScoringStateDTO }) {
       setWidePrompt(true);
       return;
     }
+    if (type === "NO_BALL") {
+      setNoBallPrompt(true);
+      return;
+    }
     void run(() =>
       consoleRecordDelivery(mid, {
         inningsId: innings.id,
@@ -146,6 +151,28 @@ export function ScoringConsole({ initial }: { initial: ScoringStateDTO }) {
         extraType: "WIDE",
         extraRuns: 1 + extra,
         extrasAreBoundary: extra === 4,
+      }),
+    );
+  };
+
+  /**
+   * A no-ball is always +1 extra — but unlike a wide, the batter CAN hit it,
+   * so `runsOffBat` works exactly like a normal delivery (0/1/2/3/4/6). Total
+   * scored = runsOffBat + 1; the extra 1 run is tracked separately from the
+   * bat runs (matches how it's shown on every real scorecard).
+   */
+  const recordNoBall = (runsOffBat: number) => {
+    setNoBallPrompt(false);
+    if (!innings || !bowlerId) return;
+    void run(() =>
+      consoleRecordDelivery(mid, {
+        inningsId: innings.id,
+        idempotencyKey: key(),
+        expectedSequence: innings.nextSequence,
+        bowlerId,
+        runsOffBat,
+        extraType: "NO_BALL",
+        extraRuns: 1,
       }),
     );
   };
@@ -324,6 +351,13 @@ export function ScoringConsole({ initial }: { initial: ScoringStateDTO }) {
         <WidePrompt
           onPick={recordWide}
           onCancel={() => setWidePrompt(false)}
+        />
+      )}
+
+      {noBallPrompt && (
+        <NoBallPrompt
+          onPick={recordNoBall}
+          onCancel={() => setNoBallPrompt(false)}
         />
       )}
 
@@ -656,6 +690,29 @@ function WidePrompt({ onPick, onCancel }: { onPick: (extra: number) => void; onC
           {[0, 1, 2, 3, 4].map((r) => (
             <button key={r} type="button" className="btn btn-soft" style={{ height: 52, fontFamily: "var(--font-display)", fontSize: r === 0 ? 14 : 22 }} onClick={() => onPick(r)}>
               {r === 0 ? "WB" : r}
+            </button>
+          ))}
+        </div>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={onCancel}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A no-ball is always +1 extra, but the batter can hit it like a normal
+ * ball — so this picks runsOffBat (0/1/2/3/4/6), same set as the main pad.
+ */
+function NoBallPrompt({ onPick, onCancel }: { onPick: (runs: number) => void; onCancel: () => void }) {
+  return (
+    <div className="overlay" onClick={onCancel} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()} className="card" style={{ width: 320, maxWidth: "100%", padding: 22, display: "flex", flexDirection: "column", gap: 14 }}>
+        <span className="t-h3">No ball — runs off the bat?</span>
+        <span style={{ fontSize: 11.5, color: "var(--muted)" }}>The no-ball itself is always 1 extra run. Pick what the batter scored, if anything.</span>
+        <div className="grid grid-cols-3" style={{ gap: 8 }}>
+          {[0, 1, 2, 3, 4, 6].map((r) => (
+            <button key={r} type="button" className="btn btn-soft" style={{ height: 52, fontFamily: "var(--font-display)", fontSize: r === 0 ? 14 : 22 }} onClick={() => onPick(r)}>
+              {r === 0 ? "NB" : r}
             </button>
           ))}
         </div>

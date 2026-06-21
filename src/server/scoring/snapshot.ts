@@ -146,10 +146,23 @@ export async function buildSnapshotPayload(
       for (const id of [d.strikerId, d.nonStrikerId, d.bowlerId]) {
         if (id) playerIds.add(id);
       }
-      if (d.wicket) playerIds.add(d.wicket.dismissedPlayerId);
+      if (d.wicket) {
+        playerIds.add(d.wicket.dismissedPlayerId);
+        // The replacement batter brought in by a wicket/retirement becomes
+        // the new striker — without this they'd show as "Unknown" on the
+        // public site until they themselves face a delivery.
+        if (d.wicket.newBatterId) playerIds.add(d.wicket.newBatterId);
+      }
     }
     if (inn.openingStrikerId) playerIds.add(inn.openingStrikerId);
     if (inn.openingNonStrikerId) playerIds.add(inn.openingNonStrikerId);
+  }
+  // Belt-and-suspenders: the full official XI is always a safe superset —
+  // covers any current/future event type that introduces a player without
+  // every call site having to be updated (matches scoring-state.ts's
+  // approach, which is why the admin console never shows "Unknown").
+  for (const p of match.playingXI) {
+    playerIds.add(p.playerId);
   }
   const players = playerIds.size
     ? await db.player.findMany({
